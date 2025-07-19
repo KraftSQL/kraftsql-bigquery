@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(libs.kraftsql.core)
 }
 
 java {

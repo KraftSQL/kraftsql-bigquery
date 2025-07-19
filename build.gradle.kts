@@ -4,5 +4,8 @@ allprojects {
 
     repositories {
         mavenCentral()
+        if ((version as String).endsWith("-SNAPSHOT")) {
+            mavenLocal()
+        }
     }
 }

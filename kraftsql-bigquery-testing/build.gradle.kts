@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation(libs.junit5.api)
     implementation(project(":kraftsql-bigquery"))
+    implementation(libs.kraftsql.core.testing)
     implementation(libs.kotest.assertions.api)
     implementation(libs.kotest.assertions.shared)
 }
