@@ -56,7 +56,8 @@ class BigQueryConnection(
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
-        TODO("Not yet implemented")
+        val result = bigquery.query(QueryJobConfiguration.newBuilder(insertInto.sql()).setUseLegacySql(false).build())
+        return result.totalRows.toInt()
     }
 
     object Default : DefaultConnection<BigQueryEngine>() {
