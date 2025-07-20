@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
     implementation(libs.kraftsql.core)
+    implementation(platform(libs.google.cloud.libraries.bom))
+    implementation(libs.bigquery.client)
 }
 
 java {

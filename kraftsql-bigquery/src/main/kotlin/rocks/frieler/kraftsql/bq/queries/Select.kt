@@ -1,0 +1,23 @@
+package rocks.frieler.kraftsql.bq.queries
+
+import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
+import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.queries.Join
+import rocks.frieler.kraftsql.queries.Projection
+import rocks.frieler.kraftsql.queries.QuerySource
+import rocks.frieler.kraftsql.queries.Select
+import rocks.frieler.kraftsql.queries.execute
+
+class Select<T : Any> : Select<BigQueryEngine, T> {
+    constructor(
+        source: QuerySource<BigQueryEngine, *>,
+        joins: List<Join<BigQueryEngine>> = emptyList(),
+        columns: List<Projection<BigQueryEngine, *>>? = null,
+        filter: Expression<BigQueryEngine, Boolean>? = null,
+        grouping: List<Expression<BigQueryEngine, *>> = emptyList(),
+    ) : super(source, joins, columns, filter, grouping)
+}
+
+inline fun <reified T : Any> Select<BigQueryEngine, T>.execute() =
+    execute(BigQueryConnection.Default.get())
