@@ -2,7 +2,13 @@ package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.BigQueryOptions
+import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.QueryJobConfiguration
+import com.google.cloud.bigquery.Schema
+import com.google.cloud.bigquery.StandardTableDefinition
+import com.google.cloud.bigquery.TableId
+import com.google.cloud.bigquery.TableInfo
+import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.engine.Connection
@@ -38,7 +44,15 @@ class BigQueryConnection(
     }
 
     override fun execute(createTable: CreateTable<BigQueryEngine>) {
-        TODO("Not yet implemented")
+        val table = createTable.table
+
+        val tableId = TableId.of((table as Table<*>).datasetId, table.name)
+        val schema = Schema.of(table.columns.map { column ->
+            // TODO: nullability
+            Field.of(column.name, (column.type as Type).name)
+        })
+        val tableInfo = TableInfo.of(tableId, StandardTableDefinition.of(schema))
+        bigquery.create(tableInfo)
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
