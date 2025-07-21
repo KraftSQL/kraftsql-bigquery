@@ -13,7 +13,7 @@ import rocks.frieler.kraftsql.bq.ddl.create
 import rocks.frieler.kraftsql.bq.dml.insertInto
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.bq.queries.execute
+import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.objects.Data
 import rocks.frieler.kraftsql.objects.Row
 import rocks.frieler.kraftsql.dsl.`as`

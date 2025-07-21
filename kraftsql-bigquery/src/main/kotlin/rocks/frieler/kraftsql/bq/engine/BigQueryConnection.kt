@@ -14,7 +14,7 @@ import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.engine.Connection
 import rocks.frieler.kraftsql.engine.DefaultConnection
 import rocks.frieler.kraftsql.objects.Row
-import rocks.frieler.kraftsql.queries.Select
+import rocks.frieler.kraftsql.dql.Select
 import kotlin.reflect.KClass
 import kotlin.reflect.full.starProjectedType
 

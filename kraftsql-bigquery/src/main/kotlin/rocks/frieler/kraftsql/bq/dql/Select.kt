@@ -1,13 +1,13 @@
-package rocks.frieler.kraftsql.bq.queries
+package rocks.frieler.kraftsql.bq.dql
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.expressions.Expression
-import rocks.frieler.kraftsql.queries.Join
-import rocks.frieler.kraftsql.queries.Projection
-import rocks.frieler.kraftsql.queries.QuerySource
-import rocks.frieler.kraftsql.queries.Select
-import rocks.frieler.kraftsql.queries.execute
+import rocks.frieler.kraftsql.dql.Join
+import rocks.frieler.kraftsql.dql.Projection
+import rocks.frieler.kraftsql.dql.QuerySource
+import rocks.frieler.kraftsql.dql.Select
+import rocks.frieler.kraftsql.dql.execute
 
 class Select<T : Any> : Select<BigQueryEngine, T> {
     constructor(
