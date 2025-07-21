@@ -2,6 +2,7 @@ package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.BigQueryOptions
+import com.google.cloud.bigquery.BigQuerySQLException
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
@@ -10,6 +11,7 @@ import com.google.cloud.bigquery.TableId
 import com.google.cloud.bigquery.TableInfo
 import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.ddl.CreateTable
+import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.engine.Connection
 import rocks.frieler.kraftsql.engine.DefaultConnection
@@ -59,10 +61,24 @@ class BigQueryConnection(
         bigquery.create(tableInfo)
     }
 
+    override fun execute(dropTable: DropTable<BigQueryEngine>) {
+        val didDelete = bigquery.delete((dropTable.table as Table).getTableId())
+        if (!didDelete && !dropTable.ifExists) {
+            throw BigQuerySQLException("Table '${dropTable.table.qualifiedName}' to drop did not exist")
+        }
+    }
+
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
         val result = bigquery.query(QueryJobConfiguration.newBuilder(insertInto.sql()).setUseLegacySql(false).build())
         return result.totalRows.toInt()
     }
+
+    private fun Table<*>.getTableId() =
+        if (project != null) {
+            TableId.of(project, dataset, name)
+        } else {
+            TableId.of(dataset, name)
+        }
 
     object Default : DefaultConnection<BigQueryEngine>() {
         override fun instantiate(): Connection<BigQueryEngine> {
