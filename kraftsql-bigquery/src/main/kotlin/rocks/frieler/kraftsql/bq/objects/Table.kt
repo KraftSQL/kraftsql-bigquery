@@ -6,17 +6,15 @@ import rocks.frieler.kraftsql.objects.Table
 import kotlin.reflect.KClass
 
 class Table<T : Any> : Table<BigQueryEngine, T> {
-    val datasetId: String
+    val project: String?
+        get() = database
 
-    constructor(datasetId: String, tableId: String, columns: List<Column<BigQueryEngine>>) : super(tableId, columns) {
-        this.datasetId = datasetId
-    }
+    val dataset: String
+        get() = schema!!
 
-    constructor(datasetId: String, tableId: String, type: KClass<T>) : super(BigQueryEngine, tableId, type) {
-        this.datasetId = datasetId
-    }
+    constructor(project: String? = null, dataset: String, name: String, columns: List<Column<BigQueryEngine>>) :
+            super(project, dataset, name, columns)
 
-    override fun sql(): String {
-        return "`${datasetId}`.${super.sql()}"
-    }
+    constructor(project: String? = null, dataset: String, name: String, type: KClass<T>) :
+            super(BigQueryEngine, project, dataset, name, type)
 }

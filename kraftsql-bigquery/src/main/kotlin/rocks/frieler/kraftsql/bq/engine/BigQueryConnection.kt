@@ -44,9 +44,13 @@ class BigQueryConnection(
     }
 
     override fun execute(createTable: CreateTable<BigQueryEngine>) {
-        val table = createTable.table
+        val table = createTable.table as Table<*>
 
-        val tableId = TableId.of((table as Table<*>).datasetId, table.name)
+        val tableId = if (table.project != null) {
+            TableId.of(table.project, table.dataset, table.name)
+        } else {
+            TableId.of(table.dataset, table.name)
+        }
         val schema = Schema.of(table.columns.map { column ->
             // TODO: nullability
             Field.of(column.name, (column.type as Type).name)
