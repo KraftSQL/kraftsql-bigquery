@@ -2,14 +2,26 @@ package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.StandardSQLTypeName
 
-val STRING = Type(StandardSQLTypeName.STRING)
+object Types {
 
-val BOOL = Type(StandardSQLTypeName.BOOL)
+    val STRING = Type(StandardSQLTypeName.STRING)
 
-val INT64 = Type(StandardSQLTypeName.INT64)
+    val BOOL = Type(StandardSQLTypeName.BOOL)
 
-val NUMERIC = Type(StandardSQLTypeName.NUMERIC)
+    val INT64 = Type(StandardSQLTypeName.INT64)
 
-val TIMESTAMP = Type(StandardSQLTypeName.TIMESTAMP)
+    val NUMERIC = Type(StandardSQLTypeName.NUMERIC)
 
-// TODO: implement all types (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types)
+    val TIMESTAMP = Type(StandardSQLTypeName.TIMESTAMP)
+
+    // TODO: implement all types (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types)
+
+    fun parseType(type: String) : Type = when (type) {
+        STRING.name.name -> STRING
+        BOOL.name.name -> BOOL
+        INT64.name.name -> INT64
+        NUMERIC.name.name -> NUMERIC
+        TIMESTAMP.name.name -> TIMESTAMP
+        else -> error("unknown BigQuery type: '$type'")
+    }
+}
