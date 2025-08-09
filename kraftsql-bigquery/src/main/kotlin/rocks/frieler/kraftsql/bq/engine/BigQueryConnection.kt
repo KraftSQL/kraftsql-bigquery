@@ -45,6 +45,7 @@ class BigQueryConnection(
         val schema = Schema.of(table.columns.map { column ->
             when (val bqColumnType = column.type as Type) {
                 // TODO: nullability
+                is Types.ARRAY -> Field.newBuilder(column.name, bqColumnType.contentType.name).setMode(Field.Mode.REPEATED).build()
                 else -> Field.of(column.name, bqColumnType.name)
             }
         })

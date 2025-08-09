@@ -2,11 +2,14 @@ package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldValue
+import com.google.cloud.bigquery.FieldValueList
 import rocks.frieler.kraftsql.engine.ORMapping
 import rocks.frieler.kraftsql.objects.Row
 import java.time.Instant
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
@@ -23,6 +26,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             Float::class.starProjectedType -> Types.NUMERIC
             Double::class.starProjectedType -> Types.NUMERIC
             Instant::class.starProjectedType -> Types.TIMESTAMP
+            Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
         }
 
@@ -33,6 +37,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             Types.INT64 -> typeOf<Long>()
             Types.NUMERIC -> typeOf<Double>()
             Types.TIMESTAMP -> typeOf<Instant>()
+            is Types.ARRAY -> Array::class.createType(listOf(KTypeProjection.invariant(getKTypeFor(sqlType.contentType))))
             else -> throw NotImplementedError("Unsupported SQL type $sqlType")
         }
 
@@ -40,7 +45,23 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
         return queryResult.map { row ->
             if (type == Row::class) {
                 @Suppress("UNCHECKED_CAST")
-                Row(row.entries.associate { (field, fieldValue) -> field.name to fieldValue.value }) as T
+                Row(row.entries.associate { (field, fieldValue) -> field.name to
+                        fieldValue.value.let { value ->
+                        when (value) {
+                            is FieldValueList -> {
+                                if (field.mode == Field.Mode.REPEATED) {
+                                    val elementType = getKTypeFor(Types.parseType(field.type.standardType.name)).jvmErasure.java
+                                    (java.lang.reflect.Array.newInstance(elementType, value.size) as Array<Any?>).also { array ->
+                                        value.forEachIndexed { index, element -> array[index] = element.value }
+                                    }
+                                } else {
+                                    NotImplementedError("Other FieldValueLists then REPEATED fields are not implemented yet.")
+                                }
+                            }
+                            else -> value
+                        }
+                    }
+                }) as T
             } else {
                 val constructor = type.constructors.first()
                 val fieldValues = row.mapKeys { (field, _) -> field.name }
