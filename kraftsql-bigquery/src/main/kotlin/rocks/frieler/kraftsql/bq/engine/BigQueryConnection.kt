@@ -15,10 +15,8 @@ import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.engine.Connection
 import rocks.frieler.kraftsql.engine.DefaultConnection
-import rocks.frieler.kraftsql.objects.Row
 import rocks.frieler.kraftsql.dql.Select
 import kotlin.reflect.KClass
-import kotlin.reflect.full.starProjectedType
 
 class BigQueryConnection(
     private val bigquery: BigQuery,
@@ -26,23 +24,14 @@ class BigQueryConnection(
 
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {
         val result = bigquery.query(QueryJobConfiguration.newBuilder(select.sql()).setUseLegacySql(false).build())
-
-        return result.iterateAll().map { row ->
-            if (type != Row::class) {
-                val constructor = type.constructors.first()
-                constructor.callBy(constructor.parameters.associateWith { param ->
-                    when (param.type) {
-                        Integer::class.starProjectedType -> row.get(param.name).numericValue.toInt()
-                        Long::class.starProjectedType -> row.get(param.name).numericValue.toLong()
-                        String::class.starProjectedType -> row.get(param.name).stringValue
-                        else -> throw NotImplementedError("Unsupported field type ${param.type}")
+        return BigQueryORMapping.deserializeQueryResult(
+            result.iterateAll()
+                .map { fieldValues ->
+                    result.schema!!.fields.associateWith { field ->
+                        fieldValues.get(field.name)
                     }
-                })
-            } else {
-                @Suppress("UNCHECKED_CAST")
-                Row(result.schema!!.fields.associate { field -> field.name to row.get(field.name).value }) as T
-            }
-        }
+                },
+            type)
     }
 
     override fun execute(createTable: CreateTable<BigQueryEngine>) {
@@ -54,8 +43,11 @@ class BigQueryConnection(
             TableId.of(table.dataset, table.name)
         }
         val schema = Schema.of(table.columns.map { column ->
-            // TODO: nullability
-            Field.of(column.name, (column.type as Type).name)
+            when (val bqColumnType = column.type as Type) {
+                // TODO: nullability
+                is Types.ARRAY -> Field.newBuilder(column.name, bqColumnType.contentType.name).setMode(Field.Mode.REPEATED).build()
+                else -> Field.of(column.name, bqColumnType.name)
+            }
         })
         val tableInfo = TableInfo.of(tableId, StandardTableDefinition.of(schema))
         bigquery.create(tableInfo)
