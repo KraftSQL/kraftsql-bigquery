@@ -4,6 +4,7 @@ import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.BigQuerySQLException
 import com.google.cloud.bigquery.Field
+import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardTableDefinition
@@ -42,13 +43,21 @@ class BigQueryConnection(
         } else {
             TableId.of(table.dataset, table.name)
         }
-        val schema = Schema.of(table.columns.map { column ->
-            when (val bqColumnType = column.type as Type) {
+
+        fun constructField(name: String, type: Type): Field =
+            when (type) {
                 // TODO: nullability
-                is Types.ARRAY -> Field.newBuilder(column.name, bqColumnType.contentType.name).setMode(Field.Mode.REPEATED).build()
-                else -> Field.of(column.name, bqColumnType.name)
+                is Types.ARRAY -> Field.newBuilder(name, type.contentType.name).setMode(Field.Mode.REPEATED)
+                    .build()
+                is Types.STRUCT -> Field.newBuilder(
+                    name,
+                    type.name,
+                    FieldList.of(type.fields.map { (subfieldName, subfieldType) -> constructField(subfieldName, subfieldType) })
+                ).build()
+                else -> Field.of(name, type.name)
             }
-        })
+        val schema = Schema.of(table.columns.map { column -> constructField(column.name, column.type as Type) })
+
         val tableInfo = TableInfo.of(tableId, StandardTableDefinition.of(schema))
         bigquery.create(tableInfo)
     }

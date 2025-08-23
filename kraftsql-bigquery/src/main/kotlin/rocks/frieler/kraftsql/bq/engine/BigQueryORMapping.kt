@@ -2,9 +2,14 @@ package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldValue
-import com.google.cloud.bigquery.FieldValueList
+import com.google.cloud.bigquery.StandardSQLTypeName
+import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.engine.ORMapping
+import rocks.frieler.kraftsql.engine.ensuredPrimaryConstructor
+import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.expressions.Row
 import rocks.frieler.kraftsql.objects.DataRow
+import java.math.BigDecimal
 import java.time.Instant
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -16,17 +21,20 @@ import kotlin.reflect.typeOf
 
 object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldValue>>> {
     override fun getTypeFor(type: KType) : Type =
-        when (type.jvmErasure.starProjectedType) {
-            String::class.starProjectedType -> Types.STRING
-            Boolean::class.starProjectedType -> Types.BOOL
-            Byte::class.starProjectedType -> Types.INT64
-            Short::class.starProjectedType -> Types.INT64
-            Int::class.starProjectedType -> Types.INT64
-            Long::class.starProjectedType -> Types.INT64
-            Float::class.starProjectedType -> Types.NUMERIC
-            Double::class.starProjectedType -> Types.NUMERIC
-            Instant::class.starProjectedType -> Types.TIMESTAMP
-            Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
+        when {
+            type == typeOf<String>() -> Types.STRING
+            type == typeOf<Boolean>() -> Types.BOOL
+            type == typeOf<Byte>() -> Types.INT64
+            type == typeOf<Short>() -> Types.INT64
+            type == typeOf<Int>() -> Types.INT64
+            type == typeOf<Long>() -> Types.INT64
+            type == typeOf<Float>() -> Types.NUMERIC
+            type == typeOf<Double>() -> Types.NUMERIC
+            type == typeOf<BigDecimal>() -> Types.BIGNUMERIC
+            type == typeOf<Instant>() -> Types.TIMESTAMP
+            type.jvmErasure.starProjectedType == Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
+            type.jvmErasure.isData -> Types.STRUCT(type.jvmErasure.ensuredPrimaryConstructor().parameters.associate { param -> param.name!! to getTypeFor(param.type) })
+            type == typeOf<DataRow>() -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
         }
 
@@ -36,52 +44,103 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             Types.BOOL -> typeOf<Boolean>()
             Types.INT64 -> typeOf<Long>()
             Types.NUMERIC -> typeOf<Double>()
+            Types.BIGNUMERIC -> typeOf<BigDecimal>()
             Types.TIMESTAMP -> typeOf<Instant>()
             is Types.ARRAY -> Array::class.createType(listOf(KTypeProjection.invariant(getKTypeFor(sqlType.contentType))))
+            is Types.STRUCT -> typeOf<DataRow>()
             else -> throw NotImplementedError("Unsupported SQL type $sqlType")
         }
 
-    override fun <T : Any> deserializeQueryResult(queryResult: Iterable<Map<Field, FieldValue>>, type: KClass<T>): List<T> {
-        return queryResult.map { row ->
-            if (type == DataRow::class) {
-                @Suppress("UNCHECKED_CAST")
-                DataRow(row.entries.associate { (field, fieldValue) -> field.name to
-                        fieldValue.value.let { value ->
-                        when (value) {
-                            is FieldValueList -> {
-                                if (field.mode == Field.Mode.REPEATED) {
-                                    val elementType = getKTypeFor(Types.parseType(field.type.standardType.name)).jvmErasure.java
-                                    (java.lang.reflect.Array.newInstance(elementType, value.size) as Array<Any?>).also { array ->
-                                        value.forEachIndexed { index, element -> array[index] = element.value }
-                                    }
-                                } else {
-                                    NotImplementedError("Other FieldValueLists then REPEATED fields are not implemented yet.")
-                                }
-                            }
-                            else -> value
-                        }
-                    }
-                }) as T
-            } else {
-                val constructor = type.constructors.first()
-                val fieldValues = row.mapKeys { (field, _) -> field.name }
-                constructor.callBy(constructor.parameters.associateWith { param ->
-                    when (param.type.jvmErasure.starProjectedType) {
-                        Integer::class.starProjectedType -> fieldValues[param.name]!!.numericValue.toInt()
-                        Long::class.starProjectedType -> fieldValues[param.name]!!.numericValue.toLong()
-                        String::class.starProjectedType -> fieldValues[param.name]!!.stringValue
-                        Array::class.starProjectedType -> {
-                            val elements = fieldValues[param.name]!!.repeatedValue.map { element -> element.value }
-                            val elementType = param.type.arguments.single().type!!.jvmErasure
-                            @Suppress("UNCHECKED_CAST")
-                            val array = java.lang.reflect.Array.newInstance(elementType.java, elements.size) as Array<Any?>
-                            elements.forEachIndexed { index, element -> array[index] = element }
-                            return@associateWith array
-                        }
-                        else -> throw NotImplementedError("Unsupported field type ${param.type}")
-                    }
-                })
+    override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, T> {
+        fun <T : Any> replaceWithBQExpressions(expression: Expression<BigQueryEngine, T>) : Expression<BigQueryEngine, T> =
+            when (expression) {
+                is rocks.frieler.kraftsql.expressions.Constant -> rocks.frieler.kraftsql.bq.expressions.Constant(expression.value)
+                is Row -> Struct(
+                    expression.values?.mapValues { (_, value) ->
+                        @Suppress("UNCHECKED_CAST")
+                        replaceWithBQExpressions(value as Expression<BigQueryEngine, Any>)
+                    })
+                else -> expression
             }
+
+        return replaceWithBQExpressions(super.serialize(value))
+    }
+
+    override fun <T : Any> deserializeQueryResult(queryResult: Iterable<Map<Field, FieldValue>>, type: KClass<T>): List<T> =
+        queryResult.map { row -> deserializeRow(row, type) }
+
+    private fun <T : Any> deserializeRow(row: Map<Field, FieldValue>, type: KClass<T>): T =
+        when {
+        type == Integer::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().longValue.toInt() as T
+        }
+        type == Long::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().longValue as T
+        }
+        type == Float::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().doubleValue.toFloat() as T
+        }
+        type == Double::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().doubleValue as T
+        }
+        type == BigDecimal::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().numericValue as T
+        }
+        type == String::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().stringValue as T
+        }
+        type == Instant::class -> {
+            @Suppress("UNCHECKED_CAST")
+            row.values.single().timestampInstant as T
+        }
+        type.starProjectedType == typeOf<Array<*>>() -> {
+            val field = row.keys.single()
+            val fieldValues = row.values.single().repeatedValue
+            val elementField = Field.of("_", field.type.standardType, field.subFields)
+            val elementType = getKTypeFor(elementField.getSqlType()).jvmErasure
+            val elements = deserializeQueryResult(fieldValues.map { value -> mapOf(elementField to value) }, elementType)
+            val array = java.lang.reflect.Array.newInstance(elementType.java, elements.size)
+            @Suppress("UNCHECKED_CAST")
+            elements.forEachIndexed { index, element -> (array as Array<Any?>)[index] = element }
+            @Suppress("UNCHECKED_CAST")
+            array as T
+        }
+        type == DataRow::class -> {
+            @Suppress("UNCHECKED_CAST")
+            DataRow(row.entries.associate { (field, fieldValue) ->
+                field.name to deserializeRow(mapOf(field to fieldValue), getKTypeFor(field.getSqlType()).jvmErasure)
+            }) as T
+        }
+        type.isData -> {
+            val constructor = type.ensuredPrimaryConstructor()
+            constructor.callBy(constructor.parameters.associateWith { param ->
+                val field = row.keys.single { it.name == param.name }
+                val fieldValue = row[field]!!
+                deserializeRow(mapOf(field to fieldValue), param.type.jvmErasure)
+            })
+        }
+        else -> throw IllegalArgumentException("Unsupported target type ${type.qualifiedName}.")
+    }
+
+    private fun Field.getSqlType() : Type {
+        return when {
+            this.mode == Field.Mode.REPEATED -> {
+                if (type.standardType == StandardSQLTypeName.STRUCT) {
+                    Types.ARRAY(Types.STRUCT(this.subFields.associate { subfield -> subfield.name to subfield.getSqlType() }))
+                } else {
+                    Types.ARRAY(Types.parseType(type.standardType.name))
+                }
+            }
+            this.type.standardType == StandardSQLTypeName.STRUCT -> {
+                Types.STRUCT(subFields.associate { subfield -> subfield.name to subfield.getSqlType() })
+            }
+            else -> Types.parseType(this.type.standardType.name)
         }
     }
 }
