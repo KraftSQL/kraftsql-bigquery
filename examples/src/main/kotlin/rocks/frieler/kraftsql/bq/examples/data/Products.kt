@@ -5,7 +5,7 @@ import rocks.frieler.kraftsql.bq.objects.Table
 data class Product(
     val id: Long,
     val name: String,
-    val category: String,
+    val category: Category,
     val tags: Array<String> = arrayOf(),
 ) {
 
@@ -17,6 +17,5 @@ data class Product(
 
     override fun hashCode() = id.hashCode()
 }
-
 
 val products = Table(dataset = "examples", name = "products", type = Product::class)
