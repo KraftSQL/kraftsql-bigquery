@@ -1,14 +1,8 @@
 plugins {
-    `maven-publish`
+    id("com.vanniktech.maven.publish")
 }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            artifact(tasks["kotlinSourcesJar"])
-        }
-    }
     repositories {
         maven {
             name = "GitHubPackages"
