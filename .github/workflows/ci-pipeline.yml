@@ -20,7 +20,7 @@ jobs:
           ORG_GRADLE_PROJECT_github_packages_password: ${{ secrets.GITHUB_TOKEN }}
         with:
           arguments: |
-            check assemble generatePomFileForMavenPublication kotlinSourcesJar
+            check assemble generatePomFileForMavenPublication kotlinSourcesJar dokkaJavadocJar
             versionFile
           artifacts: |
             bq-connector-build kraftsql-bigquery/build/publications/maven/pom-default.xml kraftsql-bigquery/build/libs/kraftsql-bigquery-*.jar

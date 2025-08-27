@@ -1,5 +1,6 @@
 [versions]
 kotlin = "2.1.21"
+dokka = "2.0.0"
 kraftsql-core = "0.0.1-SNAPSHOT"
 google-cloud-libraries = "26.62.0"
 junit = "5.13.3"
@@ -22,3 +23,4 @@ kraftsql-core-testing = { group = "rocks.frieler.kraftsql", name = "kraftsql-tes
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
