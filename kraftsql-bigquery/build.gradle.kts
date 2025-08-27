@@ -1,6 +1,9 @@
+project.description = "KrafSQL BigQuery Connector"
+
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id(libs.plugins.kotlin.jvm.get().pluginId)
     `java-library`
+    alias(libs.plugins.dokka.javadoc)
     id("kraftsql-publishing")
 }
 

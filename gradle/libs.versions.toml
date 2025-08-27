@@ -1,5 +1,7 @@
 [versions]
 kotlin = "2.1.21"
+dokka = "2.0.0"
+maven-publish-plugin = "0.34.0"
 kraftsql-core = "0.0.1-SNAPSHOT"
 google-cloud-libraries = "26.62.0"
 junit = "5.13.3"
@@ -7,6 +9,7 @@ kotest = "5.9.1"
 junit-platform = "1.13.3"
 
 [libraries]
+maven-publish-plugin = { group = "com.vanniktech.maven.publish", name = "com.vanniktech.maven.publish.gradle.plugin", version.ref = "maven-publish-plugin" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 kraftsql-core = { group = "rocks.frieler.kraftsql", name = "kraftsql", version.ref = "kraftsql-core" }
 google-cloud-libraries-bom = { group = "com.google.cloud", name = "libraries-bom", version.ref = "google-cloud-libraries" }
@@ -22,3 +25,4 @@ kraftsql-core-testing = { group = "rocks.frieler.kraftsql", name = "kraftsql-tes
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
