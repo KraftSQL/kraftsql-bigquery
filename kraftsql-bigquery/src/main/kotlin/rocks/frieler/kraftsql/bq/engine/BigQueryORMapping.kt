@@ -11,6 +11,7 @@ import rocks.frieler.kraftsql.expressions.Row
 import rocks.frieler.kraftsql.objects.DataRow
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -32,6 +33,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             type == typeOf<Double>() -> Types.NUMERIC
             type == typeOf<BigDecimal>() -> Types.BIGNUMERIC
             type == typeOf<Instant>() -> Types.TIMESTAMP
+            type == typeOf<LocalDate>() -> Types.DATE
             type.jvmErasure.starProjectedType == Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
             type.jvmErasure.isData -> Types.STRUCT(type.jvmErasure.ensuredPrimaryConstructor().parameters.associate { param -> param.name!! to getTypeFor(param.type) })
             type == typeOf<DataRow>() -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
@@ -46,6 +48,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             Types.NUMERIC -> typeOf<Double>()
             Types.BIGNUMERIC -> typeOf<BigDecimal>()
             Types.TIMESTAMP -> typeOf<Instant>()
+            Types.DATE -> typeOf<LocalDate>()
             is Types.ARRAY -> Array::class.createType(listOf(KTypeProjection.invariant(getKTypeFor(sqlType.contentType))))
             is Types.STRUCT -> typeOf<DataRow>()
             else -> throw NotImplementedError("Unsupported SQL type $sqlType")
