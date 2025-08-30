@@ -13,6 +13,7 @@ import com.google.cloud.bigquery.TableInfo
 import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
+import rocks.frieler.kraftsql.dml.Delete
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.engine.Connection
 import rocks.frieler.kraftsql.engine.DefaultConnection
@@ -71,6 +72,12 @@ class BigQueryConnection(
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
         val result = bigquery.query(QueryJobConfiguration.newBuilder(insertInto.sql()).setUseLegacySql(false).build())
+        return result.totalRows.toInt()
+    }
+
+    override fun execute(delete: Delete<BigQueryEngine>): Int {
+        require(delete is rocks.frieler.kraftsql.bq.dml.Delete) { "BigQuery requires its own Delete implementation." }
+        val result = bigquery.query(QueryJobConfiguration.newBuilder(delete.sql()).setUseLegacySql(false).build())
         return result.totalRows.toInt()
     }
 
