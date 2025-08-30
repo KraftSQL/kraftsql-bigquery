@@ -117,7 +117,11 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
         type == DataRow::class -> {
             @Suppress("UNCHECKED_CAST")
             DataRow(row.entries.associate { (field, fieldValue) ->
-                field.name to deserializeRow(mapOf(field to fieldValue), getKTypeFor(field.getSqlType()).jvmErasure)
+                if (field.subFields.isNullOrEmpty()) {
+                    field.name to deserializeRow(mapOf(field to fieldValue), getKTypeFor(field.getSqlType()).jvmErasure)
+                } else {
+                    field.name to deserializeRow(field.subFields.associateWith { fieldValue.recordValue.get(it.name) }, getKTypeFor(field.getSqlType()).jvmErasure)
+                }
             }) as T
         }
         type.isData -> {
