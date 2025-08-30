@@ -11,6 +11,7 @@ import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.testing.matchers.collections.shouldContainExactlyOne
 import java.math.BigDecimal
 import java.time.Instant
+import java.time.LocalDate
 
 @WithBigQuerySimulator
 class TotalPurchaseValuePerCustomerTest {
@@ -18,8 +19,8 @@ class TotalPurchaseValuePerCustomerTest {
 
     @Test
     fun `aggregates total purchase value per Customer`() {
-        val customer1 = Customer(1, country)
-        val customer2 = Customer(2, country)
+        val customer1 = Customer(1, country, LocalDate.EPOCH)
+        val customer2 = Customer(2, country, LocalDate.EPOCH)
         val customers = ConstantData(customer1, customer2)
 
         val purchases = ConstantData(

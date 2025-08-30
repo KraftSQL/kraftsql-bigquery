@@ -16,6 +16,8 @@ object Types {
 
     val TIMESTAMP = Type(StandardSQLTypeName.TIMESTAMP)
 
+    val DATE = Type(StandardSQLTypeName.DATE)
+
     class ARRAY(val contentType: Type) : Type(StandardSQLTypeName.ARRAY) {
         override fun sql() = "ARRAY<${contentType.sql()}>"
 
@@ -50,6 +52,7 @@ object Types {
         type == NUMERIC.name.name -> NUMERIC
         type == BIGNUMERIC.name.name -> BIGNUMERIC
         type == TIMESTAMP.name.name -> TIMESTAMP
+        type == DATE.name.name -> DATE
         type.matches(ARRAY.matcher) -> ARRAY.parse(type)
         type.matches(STRUCT.matcher) -> STRUCT.parse(type)
         else -> error("unknown BigQuery type: '$type'")
