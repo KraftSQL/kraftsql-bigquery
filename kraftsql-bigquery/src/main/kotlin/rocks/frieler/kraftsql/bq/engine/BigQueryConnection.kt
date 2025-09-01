@@ -3,8 +3,10 @@ package rocks.frieler.kraftsql.bq.engine
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.BigQueryOptions
 import com.google.cloud.bigquery.BigQuerySQLException
+import com.google.cloud.bigquery.ConnectionProperty
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldList
+import com.google.cloud.bigquery.JobStatistics
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardTableDefinition
@@ -13,8 +15,11 @@ import com.google.cloud.bigquery.TableInfo
 import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
+import rocks.frieler.kraftsql.dml.BeginTransaction
+import rocks.frieler.kraftsql.dml.CommitTransaction
 import rocks.frieler.kraftsql.dml.Delete
 import rocks.frieler.kraftsql.dml.InsertInto
+import rocks.frieler.kraftsql.dml.RollbackTransaction
 import rocks.frieler.kraftsql.engine.Connection
 import rocks.frieler.kraftsql.engine.DefaultConnection
 import rocks.frieler.kraftsql.dql.Select
@@ -23,9 +28,15 @@ import kotlin.reflect.KClass
 class BigQueryConnection(
     private val bigquery: BigQuery,
 ) : Connection<BigQueryEngine> {
+    private var activeSession: String? = null
 
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {
-        val result = bigquery.query(QueryJobConfiguration.newBuilder(select.sql()).setUseLegacySql(false).build())
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(select.sql())
+            .setUseLegacySql(false)
+            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
+            .build()
+        val result = bigquery.query(jobConfiguration)
         return BigQueryORMapping.deserializeQueryResult(
             result.iterateAll()
                 .map { fieldValues ->
@@ -71,14 +82,62 @@ class BigQueryConnection(
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
-        val result = bigquery.query(QueryJobConfiguration.newBuilder(insertInto.sql()).setUseLegacySql(false).build())
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(insertInto.sql())
+            .setUseLegacySql(false)
+            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
+            .build()
+        val result = bigquery.query(jobConfiguration)
         return result.totalRows.toInt()
     }
 
     override fun execute(delete: Delete<BigQueryEngine>): Int {
         require(delete is rocks.frieler.kraftsql.bq.dml.Delete) { "BigQuery requires its own Delete implementation." }
-        val result = bigquery.query(QueryJobConfiguration.newBuilder(delete.sql()).setUseLegacySql(false).build())
+
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(delete.sql())
+            .setUseLegacySql(false)
+            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
+            .build()
+        val result = bigquery.query(jobConfiguration)
         return result.totalRows.toInt()
+    }
+
+    override fun execute(beginTransaction: BeginTransaction<BigQueryEngine>) {
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(beginTransaction.sql())
+            .setUseLegacySql(false)
+            .apply {
+                if (activeSession != null) {
+                    setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession)))
+                } else {
+                    setCreateSession(true)
+                }
+            }
+            .build()
+        bigquery.query(jobConfiguration).also {
+            activeSession = activeSession ?: bigquery.getJob(it.jobId).getStatistics<JobStatistics.QueryStatistics>().sessionInfo.sessionId
+        }
+    }
+
+    override fun execute(commitTransaction: CommitTransaction<BigQueryEngine>) {
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(commitTransaction.sql())
+            .setUseLegacySql(false)
+            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
+            .build()
+        bigquery.query(jobConfiguration)
+        // TODO: terminate session?
+    }
+
+    override fun execute(rollbackTransaction: RollbackTransaction<BigQueryEngine>) {
+        val jobConfiguration = QueryJobConfiguration
+            .newBuilder(rollbackTransaction.sql())
+            .setUseLegacySql(false)
+            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
+            .build()
+        bigquery.query(jobConfiguration)
+        // TODO: terminate session?
     }
 
     private fun Table<*>.getTableId() =
