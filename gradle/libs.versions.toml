@@ -2,7 +2,7 @@
 kotlin = "2.1.21"
 dokka = "2.0.0"
 maven-publish-plugin = "0.34.0"
-kraftsql-core = "0.0.2-SNAPSHOT"
+kraftsql-core = "0.0.2"
 google-cloud-libraries = "26.62.0"
 junit = "5.13.3"
 kotest = "5.9.1"
