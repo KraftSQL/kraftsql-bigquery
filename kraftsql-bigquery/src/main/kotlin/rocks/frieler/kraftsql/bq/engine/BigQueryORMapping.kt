@@ -23,20 +23,20 @@ import kotlin.reflect.typeOf
 object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldValue>>> {
     override fun getTypeFor(type: KType) : Type =
         when {
-            type == typeOf<String>() -> Types.STRING
-            type == typeOf<Boolean>() -> Types.BOOL
-            type == typeOf<Byte>() -> Types.INT64
-            type == typeOf<Short>() -> Types.INT64
-            type == typeOf<Int>() -> Types.INT64
-            type == typeOf<Long>() -> Types.INT64
-            type == typeOf<Float>() -> Types.NUMERIC
-            type == typeOf<Double>() -> Types.NUMERIC
-            type == typeOf<BigDecimal>() -> Types.BIGNUMERIC
-            type == typeOf<Instant>() -> Types.TIMESTAMP
-            type == typeOf<LocalDate>() -> Types.DATE
+            type in setOf(typeOf<String>(), typeOf<String?>()) -> Types.STRING
+            type in setOf(typeOf<Boolean>(), typeOf<Boolean?>()) -> Types.BOOL
+            type in setOf(typeOf<Byte>(), typeOf<Byte?>()) -> Types.INT64
+            type in setOf(typeOf<Short>(), typeOf<Short?>()) -> Types.INT64
+            type in setOf(typeOf<Int>(), typeOf<Int?>()) -> Types.INT64
+            type in setOf(typeOf<Long>(), typeOf<Long?>()) -> Types.INT64
+            type in setOf(typeOf<Float>(), typeOf<Float?>()) -> Types.NUMERIC
+            type in setOf(typeOf<Double>(), typeOf<Double?>()) -> Types.NUMERIC
+            type in setOf(typeOf<BigDecimal>(), typeOf<BigDecimal?>()) -> Types.BIGNUMERIC
+            type in setOf(typeOf<Instant>(), typeOf<Instant?>()) -> Types.TIMESTAMP
+            type in setOf(typeOf<LocalDate>(), typeOf<LocalDate?>()) -> Types.DATE
             type.jvmErasure.starProjectedType == Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
             type.jvmErasure.isData -> Types.STRUCT(type.jvmErasure.ensuredPrimaryConstructor().parameters.associate { param -> param.name!! to getTypeFor(param.type) })
-            type == typeOf<DataRow>() -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
+            type in setOf(typeOf<DataRow>(), typeOf<DataRow?>()) -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
         }
 
