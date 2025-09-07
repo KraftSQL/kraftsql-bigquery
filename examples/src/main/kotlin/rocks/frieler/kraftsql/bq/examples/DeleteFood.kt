@@ -6,8 +6,7 @@ import rocks.frieler.kraftsql.bq.examples.data.products
 import rocks.frieler.kraftsql.expressions.`=`
 import rocks.frieler.kraftsql.bq.ddl.create
 import rocks.frieler.kraftsql.bq.ddl.drop
-import rocks.frieler.kraftsql.bq.dml.Delete
-import rocks.frieler.kraftsql.bq.dml.execute
+import rocks.frieler.kraftsql.bq.dml.delete
 import rocks.frieler.kraftsql.bq.dml.insertInto
 import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
@@ -34,5 +33,4 @@ fun main() {
 }
 
 fun deleteFood(productTable: Table<Product>) =
-    Delete(productTable, productTable[Product::category][Category::name] `=` Constant("Food"))
-        .execute()
+    productTable.delete(productTable[Product::category][Category::name] `=` Constant("Food"))

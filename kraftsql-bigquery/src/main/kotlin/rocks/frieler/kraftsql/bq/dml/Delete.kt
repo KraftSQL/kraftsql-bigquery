@@ -9,3 +9,6 @@ import rocks.frieler.kraftsql.expressions.Expression
 class Delete(table: Table<*>, condition: Expression<BigQueryEngine, Boolean>) : rocks.frieler.kraftsql.dml.Delete<BigQueryEngine>(table, condition)
 
 fun Delete.execute() = execute(BigQueryConnection.Default.get())
+
+fun Table<*>.delete(condition: Expression<BigQueryEngine, Boolean>) =
+    Delete(this, condition).execute()
