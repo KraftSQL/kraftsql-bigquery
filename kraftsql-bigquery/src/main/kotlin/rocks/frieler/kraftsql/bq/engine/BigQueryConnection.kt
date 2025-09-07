@@ -149,7 +149,10 @@ class BigQueryConnection(
 
     object Default : DefaultConnection<BigQueryEngine>() {
         override fun instantiate(): Connection<BigQueryEngine> {
-            return BigQueryConnection(BigQueryOptions.getDefaultInstance().service)
+            val bigQueryOptions = BigQueryOptions.newBuilder()
+                .apply { System.getenv("KRAFTSQL_BIGQUERY_LOCATION")?.also { setLocation(it) } }
+                .build()
+            return BigQueryConnection(bigQueryOptions.service)
         }
     }
 }
