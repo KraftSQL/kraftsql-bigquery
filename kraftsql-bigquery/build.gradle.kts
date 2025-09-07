@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kraftsql.core)
+    api(libs.kraftsql.core)
     implementation(platform(libs.google.cloud.libraries.bom))
     implementation(libs.bigquery.client)
 }

@@ -8,12 +8,9 @@ plugins {
 }
 
 dependencies {
+    api(libs.kraftsql.core.testing)
     implementation(libs.junit5.api)
-    implementation(libs.kraftsql.core)
     implementation(project(":kraftsql-bigquery"))
-    implementation(libs.kraftsql.core.testing)
-    implementation(libs.kotest.assertions.api)
-    implementation(libs.kotest.assertions.shared)
 }
 
 java {
