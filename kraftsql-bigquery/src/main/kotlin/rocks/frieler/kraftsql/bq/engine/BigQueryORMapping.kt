@@ -14,14 +14,12 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
 
 object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldValue>>> {
-    override fun getTypeFor(type: KType) : Type =
+    override fun getTypeFor(type: KType) : Type<*> =
         when {
             type in setOf(typeOf<String>(), typeOf<String?>()) -> Types.STRING
             type in setOf(typeOf<Boolean>(), typeOf<Boolean?>()) -> Types.BOOL
@@ -38,20 +36,6 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             type.jvmErasure.isData -> Types.STRUCT(type.jvmErasure.ensuredPrimaryConstructor().parameters.associate { param -> param.name!! to getTypeFor(param.type) })
             type in setOf(typeOf<DataRow>(), typeOf<DataRow?>()) -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
-        }
-
-    override fun getKTypeFor(sqlType: rocks.frieler.kraftsql.engine.Type<BigQueryEngine>) : KType =
-        when (sqlType) {
-            Types.STRING -> typeOf<String>()
-            Types.BOOL -> typeOf<Boolean>()
-            Types.INT64 -> typeOf<Long>()
-            Types.NUMERIC -> typeOf<Double>()
-            Types.BIGNUMERIC -> typeOf<BigDecimal>()
-            Types.TIMESTAMP -> typeOf<Instant>()
-            Types.DATE -> typeOf<LocalDate>()
-            is Types.ARRAY -> Array::class.createType(listOf(KTypeProjection.invariant(getKTypeFor(sqlType.contentType))))
-            is Types.STRUCT -> typeOf<DataRow>()
-            else -> throw NotImplementedError("Unsupported SQL type $sqlType")
         }
 
     override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, T> {
@@ -106,7 +90,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             val field = row.keys.single()
             val fieldValues = row.values.single().repeatedValue
             val elementField = Field.of("_", field.type.standardType, field.subFields)
-            val elementType = getKTypeFor(elementField.getSqlType()).jvmErasure
+            val elementType = elementField.getSqlType().naturalType.jvmErasure
             val elements = deserializeQueryResult(fieldValues.map { value -> mapOf(elementField to value) }, elementType)
             val array = java.lang.reflect.Array.newInstance(elementType.java, elements.size)
             @Suppress("UNCHECKED_CAST")
@@ -118,9 +102,9 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             @Suppress("UNCHECKED_CAST")
             DataRow(row.entries.associate { (field, fieldValue) ->
                 if (field.subFields.isNullOrEmpty()) {
-                    field.name to deserializeRow(mapOf(field to fieldValue), getKTypeFor(field.getSqlType()).jvmErasure)
+                    field.name to deserializeRow(mapOf(field to fieldValue), field.getSqlType().naturalType.jvmErasure)
                 } else {
-                    field.name to deserializeRow(field.subFields.associateWith { fieldValue.recordValue.get(it.name) }, getKTypeFor(field.getSqlType()).jvmErasure)
+                    field.name to deserializeRow(field.subFields.associateWith { fieldValue.recordValue.get(it.name) }, field.getSqlType().naturalType.jvmErasure)
                 }
             }) as T
         }
@@ -135,7 +119,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
         else -> throw IllegalArgumentException("Unsupported target type ${type.qualifiedName}.")
     }
 
-    private fun Field.getSqlType() : Type {
+    private fun Field.getSqlType() : Type<*> {
         return when {
             this.mode == Field.Mode.REPEATED -> {
                 if (type.standardType == StandardSQLTypeName.STRUCT) {

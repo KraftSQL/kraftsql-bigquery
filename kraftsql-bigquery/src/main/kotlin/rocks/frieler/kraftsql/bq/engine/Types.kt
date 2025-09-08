@@ -1,34 +1,42 @@
 package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.StandardSQLTypeName
+import rocks.frieler.kraftsql.objects.DataRow
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.reflect.typeOf
 
 object Types {
 
-    val STRING = Type(StandardSQLTypeName.STRING)
+    val STRING = Type<String>(StandardSQLTypeName.STRING, typeOf<String>())
 
-    val BOOL = Type(StandardSQLTypeName.BOOL)
+    val BOOL = Type<Boolean>(StandardSQLTypeName.BOOL, typeOf<Boolean>())
 
-    val INT64 = Type(StandardSQLTypeName.INT64)
+    val INT64 = Type<Long>(StandardSQLTypeName.INT64, typeOf<Long>())
 
-    val NUMERIC = Type(StandardSQLTypeName.NUMERIC)
+    val NUMERIC = Type<Double>(StandardSQLTypeName.NUMERIC, typeOf<Double>())
 
-    val BIGNUMERIC = Type(StandardSQLTypeName.BIGNUMERIC)
+    val BIGNUMERIC = Type<BigDecimal>(StandardSQLTypeName.BIGNUMERIC, typeOf<BigDecimal>())
 
-    val TIMESTAMP = Type(StandardSQLTypeName.TIMESTAMP)
+    val TIMESTAMP = Type<Instant>(StandardSQLTypeName.TIMESTAMP, typeOf<Instant>())
 
-    val DATE = Type(StandardSQLTypeName.DATE)
+    val DATE = Type<LocalDate>(StandardSQLTypeName.DATE, typeOf<LocalDate>())
 
-    class ARRAY(val contentType: Type) : Type(StandardSQLTypeName.ARRAY) {
+    class ARRAY<C : Any>(val contentType: Type<C>) : Type<Array<C>>(StandardSQLTypeName.ARRAY, typeOf<Array<*>>()) {
         override fun sql() = "ARRAY<${contentType.sql()}>"
+        override fun naturalKType() = Array::class.createType(listOf(KTypeProjection.invariant(contentType.naturalType)))
 
         companion object {
             val matcher = "^ARRAY<.+>$".toRegex()
 
-            fun parse(type: String) = ARRAY(parseType(type.removePrefix("ARRAY<").removeSuffix(">")))
+            fun parse(type: String): ARRAY<*> = ARRAY(parseType(type.removePrefix("ARRAY<").removeSuffix(">")))
         }
     }
 
-    class STRUCT(val fields: Map<String, Type>) : Type(StandardSQLTypeName.STRUCT) {
+    class STRUCT(val fields: Map<String, Type<*>>) : Type<DataRow>(StandardSQLTypeName.STRUCT, typeOf<DataRow>()) {
         override fun sql() = "STRUCT<${fields.entries.joinToString(",") { (name, type) -> "$name ${type.sql()}"} }>"
 
         companion object {
@@ -45,7 +53,7 @@ object Types {
 
     // TODO: implement all types (https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types)
 
-    fun parseType(type: String) : Type = when {
+    fun parseType(type: String) : Type<*> = when {
         type == STRING.name.name -> STRING
         type == BOOL.name.name -> BOOL
         type == INT64.name.name -> INT64

@@ -56,10 +56,10 @@ class BigQueryConnection(
             TableId.of(table.dataset, table.name)
         }
 
-        fun constructField(name: String, type: Type): Field =
+        fun constructField(name: String, type: Type<*>): Field =
             when (type) {
                 // TODO: nullability
-                is Types.ARRAY -> Field.newBuilder(name, type.contentType.name).setMode(Field.Mode.REPEATED)
+                is Types.ARRAY<*> -> Field.newBuilder(name, type.contentType.name).setMode(Field.Mode.REPEATED)
                     .build()
                 is Types.STRUCT -> Field.newBuilder(
                     name,
