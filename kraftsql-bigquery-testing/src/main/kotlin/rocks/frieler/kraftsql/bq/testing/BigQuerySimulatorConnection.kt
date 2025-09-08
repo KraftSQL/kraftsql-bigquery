@@ -1,6 +1,8 @@
 package rocks.frieler.kraftsql.bq.testing
 
+import com.jayway.jsonpath.JsonPath
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
@@ -37,6 +39,12 @@ class BigQuerySimulatorConnection : SimulatorConnection<BigQueryEngine>() {
                             (matcher.group("tz").trim().ifEmpty { null } ?: "Z")
                     Instant.parse(canonicalTimestamp)
                 } as T?
+            }
+            is JsonValue -> { row ->
+                val jsonString = simulateExpression(expression.jsonString).invoke(row)
+                val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
+                @Suppress("UNCHECKED_CAST")
+                JsonPath.read<String>(jsonString, jsonPath ?: "$") as T?
             }
             else -> super.simulateExpression(expression)
         }
