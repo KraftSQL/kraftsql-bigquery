@@ -11,6 +11,9 @@ dependencies {
     api(libs.kraftsql.core.testing)
     implementation(libs.junit5.api)
     implementation(project(":kraftsql-bigquery"))
+    implementation(libs.jsonpath) {
+        runtimeOnly(libs.slf4j.nop)
+    }
 }
 
 java {
