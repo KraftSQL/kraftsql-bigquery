@@ -3,6 +3,7 @@ package rocks.frieler.kraftsql.bq.testing
 import com.jayway.jsonpath.JsonPath
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
+import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
@@ -45,6 +46,12 @@ class BigQuerySimulatorConnection : SimulatorConnection<BigQueryEngine>() {
                 val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
                 @Suppress("UNCHECKED_CAST")
                 JsonPath.read<String>(jsonString, jsonPath ?: "$") as T?
+            }
+            is JsonValueArray -> { row ->
+                val jsonString = simulateExpression(expression.jsonString).invoke(row).let { if (it.isNullOrBlank()) "[]" else it }
+                val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
+                @Suppress("UNCHECKED_CAST")
+                JsonPath.read<List<Any>>(jsonString, jsonPath ?: "$").map { it.toString() }.toTypedArray() as T?
             }
             else -> super.simulateExpression(expression)
         }
