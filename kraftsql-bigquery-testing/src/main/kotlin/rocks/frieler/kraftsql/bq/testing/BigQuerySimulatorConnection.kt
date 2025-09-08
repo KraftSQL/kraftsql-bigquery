@@ -2,11 +2,15 @@ package rocks.frieler.kraftsql.bq.testing
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Replace
+import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.testing.engine.SimulatorConnection
+import java.time.Instant
 
 class BigQuerySimulatorConnection : SimulatorConnection<BigQueryEngine>() {
+    private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
+
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
         when (expression) {
             is Replace -> { row ->
@@ -18,6 +22,20 @@ class BigQuerySimulatorConnection : SimulatorConnection<BigQueryEngine>() {
                 } else {
                     val toPattern = simulateExpression(expression.toPattern).invoke(row)!!
                     originalValue?.replace(fromPattern, toPattern)
+                } as T?
+            }
+            is Timestamp -> { row ->
+                val timestamp = simulateExpression(expression.stringExpression).invoke(row)
+                @Suppress("UNCHECKED_CAST")
+                timestamp?.let {
+                    val matcher = timestampLiteralPattern.matcher(it)
+                    if (!matcher.matches()) {
+                        throw IllegalArgumentException("invalid timestamp format: $it")
+                    }
+                    val canonicalTimestamp = "${matcher.group("date")}" +
+                            "T${matcher.group("time") ?: "00:00:00.000000"}" +
+                            (matcher.group("tz").trim().ifEmpty { null } ?: "Z")
+                    Instant.parse(canonicalTimestamp)
                 } as T?
             }
             else -> super.simulateExpression(expression)
