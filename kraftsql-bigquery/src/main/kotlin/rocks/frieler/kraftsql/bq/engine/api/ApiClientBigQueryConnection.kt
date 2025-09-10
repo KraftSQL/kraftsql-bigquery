@@ -1,16 +1,20 @@
-package rocks.frieler.kraftsql.bq.engine
+package rocks.frieler.kraftsql.bq.engine.api
 
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.BigQuerySQLException
-import com.google.cloud.bigquery.ConnectionProperty
 import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldList
-import com.google.cloud.bigquery.JobStatistics
 import com.google.cloud.bigquery.QueryJobConfiguration
 import com.google.cloud.bigquery.Schema
 import com.google.cloud.bigquery.StandardTableDefinition
 import com.google.cloud.bigquery.TableId
 import com.google.cloud.bigquery.TableInfo
+import com.google.cloud.bigquery.TableResult
+import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
+import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.engine.BigQueryORMapping
+import rocks.frieler.kraftsql.bq.engine.Type
+import rocks.frieler.kraftsql.bq.engine.Types
 import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
@@ -25,15 +29,8 @@ import kotlin.reflect.KClass
 class ApiClientBigQueryConnection(
     private val bigquery: BigQuery,
 ) : BigQueryConnection {
-    private var activeSession: String? = null
-
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(select.sql())
-            .setUseLegacySql(false)
-            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
-            .build()
-        val result = bigquery.query(jobConfiguration)
+        val result = executeQuery(QueryJobConfiguration.newBuilder(select.sql()))
         return BigQueryORMapping.deserializeQueryResult(
             result.iterateAll()
                 .map { fieldValues ->
@@ -79,63 +76,38 @@ class ApiClientBigQueryConnection(
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(insertInto.sql())
-            .setUseLegacySql(false)
-            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
-            .build()
-        val result = bigquery.query(jobConfiguration)
+        val result = executeQuery(QueryJobConfiguration.newBuilder(insertInto.sql()))
         return result.totalRows.toInt()
     }
 
     override fun execute(delete: Delete<BigQueryEngine>): Int {
         require(delete is rocks.frieler.kraftsql.bq.dml.Delete) { "BigQuery requires its own Delete implementation." }
-
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(delete.sql())
-            .setUseLegacySql(false)
-            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
-            .build()
-        val result = bigquery.query(jobConfiguration)
+        val result = executeQuery(QueryJobConfiguration.newBuilder(delete.sql()))
         return result.totalRows.toInt()
     }
 
     override fun execute(beginTransaction: BeginTransaction<BigQueryEngine>) {
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(beginTransaction.sql())
-            .setUseLegacySql(false)
-            .apply {
-                if (activeSession != null) {
-                    setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession)))
-                } else {
-                    setCreateSession(true)
-                }
-            }
-            .build()
-        bigquery.query(jobConfiguration).also {
-            activeSession = activeSession ?: bigquery.getJob(it.jobId).getStatistics<JobStatistics.QueryStatistics>().sessionInfo.sessionId
-        }
+        executeQuery(QueryJobConfiguration.newBuilder(beginTransaction.sql()), requireSession = true)
     }
 
     override fun execute(commitTransaction: CommitTransaction<BigQueryEngine>) {
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(commitTransaction.sql())
-            .setUseLegacySql(false)
-            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
-            .build()
-        bigquery.query(jobConfiguration)
-        // TODO: terminate session?
+        executeQuery(QueryJobConfiguration.newBuilder(commitTransaction.sql()), requireSession = true)
     }
 
     override fun execute(rollbackTransaction: RollbackTransaction<BigQueryEngine>) {
-        val jobConfiguration = QueryJobConfiguration
-            .newBuilder(rollbackTransaction.sql())
-            .setUseLegacySql(false)
-            .apply { if (activeSession != null) setConnectionProperties(listOf(ConnectionProperty.of("session_id", activeSession))) }
-            .build()
-        bigquery.query(jobConfiguration)
-        // TODO: terminate session?
+        executeQuery(QueryJobConfiguration.newBuilder(rollbackTransaction.sql()), requireSession = true)
     }
+
+    private fun executeQuery(queryJobConfig: QueryJobConfiguration.Builder, requireSession: Boolean = false): TableResult =
+        bigquery.query(
+            queryJobConfig
+                .setUseLegacySql(false)
+                .configureSession(sessionHandler, requireSession)
+                .build()
+        )
+            .also { result ->
+                sessionHandler?.memorizeSession(result, bigquery)
+            }
 
     private fun Table<*>.getTableId() =
         if (project != null) {
@@ -143,4 +115,25 @@ class ApiClientBigQueryConnection(
         } else {
             TableId.of(dataset, name)
         }
+
+    private var sessionHandler : SessionHandler? = null
+
+    override fun setSessionMode(sessionMode: Boolean) {
+        if (sessionMode) {
+            sessionHandler = sessionHandler ?: SessionHandler()
+        } else {
+            sessionHandler?.abortSession(bigquery)
+            sessionHandler = null
+        }
+    }
+
+    private fun QueryJobConfiguration.Builder.configureSession(sessionHandler: SessionHandler?, requireSession: Boolean = false) : QueryJobConfiguration.Builder {
+        if (sessionHandler != null) {
+            sessionHandler.configureSession(this)
+        } else if (requireSession) {
+            throw IllegalStateException("Statement would require a session, but session mode is turned off.")
+        }
+
+        return this
+    }
 }
