@@ -8,15 +8,15 @@ import rocks.frieler.kraftsql.testing.SimulatorTestExtension
 
 class BigQuerySimulatorTestExtension(
     override val connectionProvider : () -> BigQuerySimulatorConnection = { BigQuerySimulatorConnection() },
-    defaultConnectionToConfigure: DefaultConnection<BigQueryEngine>? = BigQueryConnection.Default,
-) : SimulatorTestExtension<BigQueryEngine>(connectionProvider, defaultConnectionToConfigure) {
+    defaultConnectionToConfigure: DefaultConnection<BigQueryEngine, BigQueryConnection>? = BigQueryEngine.DefaultConnection,
+) : SimulatorTestExtension<BigQueryEngine, BigQueryConnection, BigQuerySimulatorConnection>(connectionProvider, defaultConnectionToConfigure) {
 
     class Builder(
         override val connectionProvider : () -> BigQuerySimulatorConnection = { BigQuerySimulatorConnection() },
-    ) : SimulatorTestExtension.Builder<BigQueryEngine>(connectionProvider) {
+    ) : SimulatorTestExtension.Builder<BigQueryEngine, BigQueryConnection, BigQuerySimulatorConnection>(connectionProvider) {
 
         init {
-            defaultConnectionToConfigure(BigQueryConnection.Default)
+            defaultConnectionToConfigure(BigQueryEngine.DefaultConnection)
         }
 
         override fun build(): BigQuerySimulatorTestExtension {

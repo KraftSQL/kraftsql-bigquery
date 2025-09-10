@@ -1,6 +1,5 @@
 package rocks.frieler.kraftsql.bq.dql
 
-import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.dql.Join
@@ -20,4 +19,4 @@ class Select<T : Any> : Select<BigQueryEngine, T> {
 }
 
 inline fun <reified T : Any> Select<BigQueryEngine, T>.execute() =
-    execute(BigQueryConnection.Default.get())
+    execute(BigQueryEngine.DefaultConnection.get())

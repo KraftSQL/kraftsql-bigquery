@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.bq.testing
 
 import com.jayway.jsonpath.JsonPath
+import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
@@ -8,10 +9,10 @@ import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
-import rocks.frieler.kraftsql.testing.engine.SimulatorConnection
+import rocks.frieler.kraftsql.testing.engine.GenericSimulatorConnection
 import java.time.Instant
 
-class BigQuerySimulatorConnection : SimulatorConnection<BigQueryEngine>() {
+class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>() {
     private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
 
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
