@@ -5,6 +5,7 @@ maven-publish-plugin = "0.34.0"
 kraftsql-core = "0.0.5-SNAPSHOT"
 google-cloud-libraries = "26.62.0"
 jsonpath = "2.9.0"
+apache-commons-csv = "1.14.1"
 slf4j = "2.0.17"
 junit = "5.13.3"
 junit-platform = "1.13.3"
@@ -16,6 +17,7 @@ kraftsql-core = { group = "rocks.frieler.kraftsql", name = "kraftsql", version.r
 google-cloud-libraries-bom = { group = "com.google.cloud", name = "libraries-bom", version.ref = "google-cloud-libraries" }
 bigquery-client = { group = "com.google.cloud", name = "google-cloud-bigquery" }
 jsonpath = { group = "com.jayway.jsonpath", name = "json-path", version.ref = "jsonpath" }
+apache-commons-csv = { group = "org.apache.commons", name = "commons-csv", version.ref = "apache-commons-csv" }
 slf4j-nop = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j" }
 kotlin-test-junit5 = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit5", version.ref = "kotlin" }
 junit5-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }

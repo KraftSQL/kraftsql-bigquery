@@ -10,6 +10,7 @@ import com.google.cloud.bigquery.StandardTableDefinition
 import com.google.cloud.bigquery.TableId
 import com.google.cloud.bigquery.TableInfo
 import com.google.cloud.bigquery.TableResult
+import rocks.frieler.kraftsql.bq.dml.LoadData
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.engine.BigQueryORMapping
@@ -91,6 +92,10 @@ class ApiClientBigQueryConnection(
         require(delete is rocks.frieler.kraftsql.bq.dml.Delete) { "BigQuery requires its own Delete implementation." }
         val result = executeQuery(QueryJobConfiguration.newBuilder(delete.sql()))
         return result.totalRows.toInt()
+    }
+
+    override fun execute(loadData: LoadData) {
+        executeQuery(QueryJobConfiguration.newBuilder(loadData.sql()), requireSession = loadData.table is TemporaryTable)
     }
 
     override fun execute(beginTransaction: BeginTransaction<BigQueryEngine>) {
