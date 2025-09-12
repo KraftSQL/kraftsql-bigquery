@@ -16,6 +16,7 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryORMapping
 import rocks.frieler.kraftsql.bq.engine.Type
 import rocks.frieler.kraftsql.bq.engine.Types
 import rocks.frieler.kraftsql.bq.objects.Table
+import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.BeginTransaction
@@ -42,6 +43,9 @@ class ApiClientBigQueryConnection(
     }
 
     override fun execute(createTable: CreateTable<BigQueryEngine>) {
+        if (createTable.table is TemporaryTable<*>) {
+            throw UnsupportedOperationException("The BigQuery API does not support creation of temporary tables.")
+        }
         val table = createTable.table as Table<*>
 
         val tableId = if (table.project != null) {
@@ -69,6 +73,9 @@ class ApiClientBigQueryConnection(
     }
 
     override fun execute(dropTable: DropTable<BigQueryEngine>) {
+        if (dropTable.table is TemporaryTable<*>) {
+            throw UnsupportedOperationException("The BigQuery API does not support dropping temporary tables.")
+        }
         val didDelete = bigquery.delete((dropTable.table as Table).getTableId())
         if (!didDelete && !dropTable.ifExists) {
             throw BigQuerySQLException("Table '${dropTable.table.qualifiedName}' to drop did not exist")

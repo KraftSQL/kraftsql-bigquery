@@ -7,6 +7,9 @@ import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
+import rocks.frieler.kraftsql.bq.objects.TemporaryTable
+import rocks.frieler.kraftsql.ddl.CreateTable
+import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.BeginTransaction
 import rocks.frieler.kraftsql.dml.Delete
 import rocks.frieler.kraftsql.dml.InsertInto
@@ -38,21 +41,47 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         }
 
         override fun addTable(table: Table<BigQueryEngine, *>) {
-            parent.addTable(table)
+            if (table is TemporaryTable<*>) {
+                super.addTable(table)
+            } else {
+                parent.addTable(table)
+            }
         }
 
         override fun removeTable(table: Table<BigQueryEngine, *>) {
-            parent.removeTable(table)
+            if (table is TemporaryTable<*>) {
+                super.removeTable(table)
+            } else {
+                parent.removeTable(table)
+            }
         }
 
         override fun writeTable(table: Table<BigQueryEngine, *>, data: List<DataRow>) {
-            parent.writeTable(table, data)
+            if (table is TemporaryTable<*>) {
+                super.writeTable(table, data)
+            } else {
+                parent.writeTable(table, data)
+            }
         }
     }
 
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {
         if (sessionMode) { ensureSession() }
         return super.execute(select, type)
+    }
+
+    override fun execute(createTable: CreateTable<BigQueryEngine>) {
+        if (createTable.table is TemporaryTable<*>) {
+            throw UnsupportedOperationException("The BigQuery API does not support creation of temporary tables.")
+        }
+        super.execute(createTable)
+    }
+
+    override fun execute(dropTable: DropTable<BigQueryEngine>) {
+        if (dropTable.table is TemporaryTable<*>) {
+            throw UnsupportedOperationException("The BigQuery API does not support dropping temporary tables.")
+        }
+        super.execute(dropTable)
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {

@@ -6,7 +6,7 @@ import rocks.frieler.kraftsql.objects.Column
 import rocks.frieler.kraftsql.objects.Table
 import kotlin.reflect.KClass
 
-class Table<T : Any> : Table<BigQueryEngine, T> {
+open class Table<T : Any> : Table<BigQueryEngine, T> {
     val project: String?
         get() = database
 
