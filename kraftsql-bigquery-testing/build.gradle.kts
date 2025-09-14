@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.jsonpath) {
         runtimeOnly(libs.slf4j.nop)
     }
+    implementation(libs.apache.commons.csv)
 }
 
 java {
