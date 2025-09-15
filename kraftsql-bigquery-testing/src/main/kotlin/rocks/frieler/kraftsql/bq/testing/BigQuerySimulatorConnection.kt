@@ -126,6 +126,7 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
             .setLenientEof(true)
             .apply { loadData.fileSource.fieldDelimiter?.let { setDelimiter(it) } }
             .apply { loadData.fileSource.quote?.let { setQuote(it) } }
+            .setNullString("")
             .get()
         loadData.fileSource.uris.forEach { uri ->
             FileReader(uri.getPath()).use { file ->
@@ -135,7 +136,7 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
                     .map { record -> DataRow(table.columns.associate { tableColumn -> tableColumn.name to
                         loadData.columns!!
                             .find { column -> column.name == tableColumn.name }
-                            ?.let { dataColumn -> record[dataColumn.name].ifEmpty { null } }
+                            ?.let { dataColumn -> record[dataColumn.name] }
                             .let { stringValue -> when(tableColumn.type.naturalKType()) {
                                 typeOf<Boolean>() -> stringValue?.toBoolean()
                                 typeOf<Long>() -> stringValue?.toLong()
