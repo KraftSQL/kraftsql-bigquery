@@ -1,8 +1,8 @@
 package rocks.frieler.kraftsql.bq.dsl
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.dsl.inTransaction
+import rocks.frieler.kraftsql.dsl.transaction
 
-fun inTransaction(content: () -> Unit) {
-    inTransaction(BigQueryEngine.DefaultConnection.get(), content)
+fun transaction(content: () -> Unit) {
+    transaction(BigQueryEngine.DefaultConnection.get(), content)
 }

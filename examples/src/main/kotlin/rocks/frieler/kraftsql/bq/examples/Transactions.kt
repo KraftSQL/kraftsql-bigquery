@@ -6,7 +6,7 @@ import rocks.frieler.kraftsql.bq.dml.execute
 import rocks.frieler.kraftsql.bq.dml.insertInto
 import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
-import rocks.frieler.kraftsql.bq.dsl.inTransaction
+import rocks.frieler.kraftsql.bq.dsl.transaction
 import rocks.frieler.kraftsql.bq.engine.Types.INT64
 import rocks.frieler.kraftsql.bq.examples.data.with
 import rocks.frieler.kraftsql.bq.expressions.Constant
@@ -23,7 +23,7 @@ fun main() {
         DataRow(mapOf("number" to 2)).insertInto(table)
 
         try {
-            inTransaction {
+            transaction {
                 Delete(table, table.get<Int>("number") `=` Constant(1)).execute()
                 DataRow(mapOf("number" to 3, "foo" to "bar")).insertInto(table)
             }
