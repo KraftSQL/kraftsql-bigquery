@@ -7,7 +7,7 @@ google-cloud-libraries = "26.62.0"
 jsonpath = "2.9.0"
 apache-commons-csv = "1.14.1"
 slf4j = "2.0.17"
-junit = "5.13.3"
+junit = "5.13.4"
 junit-platform = "1.13.3"
 kotest = "5.9.1"
 
