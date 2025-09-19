@@ -4,6 +4,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      junit:
+        patterns:
+          - org.junit.jupiter:*
+          - org.junit.platform:*
+      kotest:
+        patterns:
+          - io.kotest:kotest-*
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
