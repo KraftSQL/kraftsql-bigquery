@@ -9,7 +9,7 @@ apache-commons-csv = "1.14.1"
 slf4j = "2.0.17"
 junit = "5.13.4"
 junit-platform = "1.13.4"
-kotest = "5.9.1"
+kotest = "6.0.3"
 
 [libraries]
 maven-publish-plugin = { group = "com.vanniktech.maven.publish", name = "com.vanniktech.maven.publish.gradle.plugin", version.ref = "maven-publish-plugin" }
