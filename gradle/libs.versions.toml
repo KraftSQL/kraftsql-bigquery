@@ -2,6 +2,7 @@
 kotlin = "2.2.20"
 dokka = "2.0.0"
 maven-publish-plugin = "0.34.0"
+sonarqube = "6.3.1.5724"
 kraftsql-core = "0.0.7-SNAPSHOT"
 google-cloud-libraries = "26.68.0"
 jsonpath = "2.9.0"
@@ -29,3 +30,4 @@ kraftsql-core-testing = { group = "rocks.frieler.kraftsql", name = "kraftsql-tes
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
