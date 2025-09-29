@@ -1,4 +1,4 @@
 # KraftSQL BigQuery Examples
 
-Examples based on the [Google BigQuery](https://cloud.google.com/bigquery), which allow to demonstrate how KraftSQL can be used with BigQuery.
-These examples also serve as a space develop and try out new features of KraftSQL's BigQuery Connector.
+Examples which demonstrate how **Kraft**SQL can be used with [Google BigQuery](https://cloud.google.com/bigquery).
+These examples also serve as a space to develop and try out new features of **Kraft**SQL's BigQuery Connector.
