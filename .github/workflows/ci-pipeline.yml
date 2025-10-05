@@ -30,7 +30,9 @@ jobs:
             versionFile
           artifacts: |
             bq-connector-build kraftsql-bigquery/build/publications/maven/pom-default.xml kraftsql-bigquery/build/libs/kraftsql-bigquery-*.jar
+            bq-connector-test-report kraftsql-bigquery/build/reports/tests/test/**/*
             bq-testing-build kraftsql-bigquery-testing/build/publications/maven/pom-default.xml kraftsql-bigquery-testing/build/libs/kraftsql-bigquery-testing-*.jar
+            bq-testing-report kraftsql-bigquery-testing/build/reports/tests/test/**/*
             bq-examples-test-report examples/build/reports/tests/test/**/*
       - id: provide_version
         run: echo "version=$(cat build/version.txt)" >> "$GITHUB_OUTPUT"

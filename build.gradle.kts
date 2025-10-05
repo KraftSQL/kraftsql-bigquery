@@ -47,6 +47,7 @@ sonar {
         property("sonar.projectKey", "kraftsql_kraftsql-bigquery")
         property("sonar.projectName", "KraftSQL BigQuery Connector")
         property("sonar.gradle.scanAll", "True")
+        property("sonar.coverage.jacoco.xmlReportPaths", "**/build/reports/kover/report.xml")
         if (System.getenv("GITHUB_ACTIONS") == "true") {
             when (val githubEvent = System.getenv("GITHUB_EVENT_NAME")) {
                 "push" -> {
@@ -63,6 +64,11 @@ sonar {
 }
 project(":examples") {
     sonar.isSkipProject = true
+}
+tasks.sonar {
+    for (subproject in subprojects.filterNot { it.sonar.isSkipProject }) {
+        dependsOn("${subproject.name}:koverXmlReport")
+    }
 }
 
 tasks.register<Exec>("fetchDefaultBranch") {
