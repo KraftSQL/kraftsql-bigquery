@@ -2,11 +2,10 @@ package rocks.frieler.kraftsql.bq.expressions
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.engine.Types
-import rocks.frieler.kraftsql.engine.Engine
 import rocks.frieler.kraftsql.expressions.Constant
 import java.math.BigDecimal
 
-open class Constant<E : Engine<E>, T : Any>(
+open class Constant<T : Any>(
     value: T?,
 ) : Constant<BigQueryEngine, T>(value) {
     override fun sql(): String {
