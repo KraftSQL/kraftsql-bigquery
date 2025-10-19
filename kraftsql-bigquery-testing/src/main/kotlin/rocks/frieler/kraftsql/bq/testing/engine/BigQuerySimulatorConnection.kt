@@ -29,6 +29,9 @@ import java.time.LocalDate
 import kotlin.reflect.KClass
 import kotlin.reflect.typeOf
 
+/**
+ * [rocks.frieler.kraftsql.testing.engine.SimulatorConnection] for the [BigQueryEngine].
+ */
 class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(orm = BigQuerySimulatorORMapping) {
     private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
 
@@ -169,6 +172,13 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
 
     private fun ensureSession() {
         activeSession = activeSession ?: SessionState(rootState).also { topState = it }
+    }
+
+    init {
+        unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Constant::class)
+        registerExpressionSimulator(ConstantSimulator())
+        unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
+        registerExpressionSimulator(StructSimulator())
     }
 
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =

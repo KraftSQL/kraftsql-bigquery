@@ -1,8 +1,11 @@
 package rocks.frieler.kraftsql.bq.testing.engine
 
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
+import rocks.frieler.kraftsql.bq.expressions.Constant
+import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
@@ -22,5 +25,29 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result shouldContainExactly listOf(DataRow(mapOf("name" to "foo")))
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery Constant`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow(emptyMap()))),
+                columns = listOf(Projection(Constant(42), "const")),
+            ), DataRow::class
+        )
+
+        result.single()["const"] shouldBe 42
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery Struct`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow(emptyMap()))),
+                columns = listOf(Projection(Struct(mapOf("number" to Constant(42))), "struct")),
+            ), DataRow::class
+        )
+
+        result.single()["struct"] shouldBe DataRow(mapOf("number" to 42))
     }
 }

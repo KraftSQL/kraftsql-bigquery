@@ -4,6 +4,9 @@ import com.google.cloud.bigquery.BigQueryOptions
 import rocks.frieler.kraftsql.bq.engine.api.ApiClientBigQueryConnection
 import rocks.frieler.kraftsql.engine.Engine
 
+/**
+ * The BigQuery [Engine].
+ */
 object BigQueryEngine : Engine<BigQueryEngine> {
 
     object DefaultConnection : rocks.frieler.kraftsql.engine.DefaultConnection<BigQueryEngine, BigQueryConnection>() {
