@@ -7,7 +7,6 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
-import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
@@ -179,21 +178,11 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(ConstantSimulator())
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
         registerExpressionSimulator(StructSimulator())
+        registerExpressionSimulator(ReplaceSimulator())
     }
 
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
         when (expression) {
-            is Replace -> { row ->
-                val originalValue = simulateExpression(expression.originalValue).invoke(row)
-                val fromPattern = simulateExpression(expression.fromPattern).invoke(row)!!
-                @Suppress("UNCHECKED_CAST")
-                if (fromPattern.isEmpty()) {
-                    originalValue
-                } else {
-                    val toPattern = simulateExpression(expression.toPattern).invoke(row)!!
-                    originalValue?.replace(fromPattern, toPattern)
-                } as T?
-            }
             is Timestamp -> { row ->
                 val timestamp = simulateExpression(expression.stringExpression).invoke(row)
                 @Suppress("UNCHECKED_CAST")

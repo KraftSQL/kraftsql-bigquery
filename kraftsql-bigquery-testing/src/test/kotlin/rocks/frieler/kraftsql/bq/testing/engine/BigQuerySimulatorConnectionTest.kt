@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.expressions.Constant
+import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.Projection
@@ -49,5 +50,17 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["struct"] shouldBe DataRow(mapOf("number" to 42))
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery Replace`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow(emptyMap()))),
+                columns = listOf(Projection(Replace(Constant("Hello World!"), Constant("World"), Constant("KraftSQL")), "greeting")),
+            ), DataRow::class
+        )
+
+        result.single()["greeting"] shouldBe "Hello KraftSQL!"
     }
 }
