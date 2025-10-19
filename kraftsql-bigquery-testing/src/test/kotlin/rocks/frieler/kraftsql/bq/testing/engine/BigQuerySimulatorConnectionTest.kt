@@ -1,4 +1,4 @@
-package rocks.frieler.kraftsql.bq.testing
+package rocks.frieler.kraftsql.bq.testing.engine
 
 import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.jupiter.api.Test

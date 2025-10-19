@@ -1,4 +1,4 @@
-package rocks.frieler.kraftsql.bq.testing
+package rocks.frieler.kraftsql.bq.testing.engine
 
 import com.jayway.jsonpath.JsonPath
 import org.apache.commons.csv.CSVFormat
@@ -29,7 +29,7 @@ import java.time.LocalDate
 import kotlin.reflect.KClass
 import kotlin.reflect.typeOf
 
-class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>() {
+class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(orm = BigQuerySimulatorORMapping) {
     private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
 
     private var sessionMode = false

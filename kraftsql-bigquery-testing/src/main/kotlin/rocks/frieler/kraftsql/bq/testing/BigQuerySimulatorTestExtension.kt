@@ -4,6 +4,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.testing.engine.BigQuerySimulatorConnection
 import rocks.frieler.kraftsql.engine.DefaultConnection
 import rocks.frieler.kraftsql.testing.SimulatorTestExtension
 import kotlin.jvm.optionals.getOrNull
