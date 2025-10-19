@@ -8,7 +8,6 @@ import rocks.frieler.kraftsql.bq.examples.data.products
 import rocks.frieler.kraftsql.bq.examples.data.purchases
 import rocks.frieler.kraftsql.bq.examples.data.customers
 import rocks.frieler.kraftsql.expressions.`=`
-import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.Sum
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
@@ -21,6 +20,7 @@ import rocks.frieler.kraftsql.bq.examples.data.ProductOutline
 import rocks.frieler.kraftsql.bq.examples.data.Purchase
 import rocks.frieler.kraftsql.bq.examples.data.purchaseItems
 import rocks.frieler.kraftsql.bq.examples.data.withSampleData
+import rocks.frieler.kraftsql.bq.expressions.Constant
 
 fun main() {
     withSampleData {
