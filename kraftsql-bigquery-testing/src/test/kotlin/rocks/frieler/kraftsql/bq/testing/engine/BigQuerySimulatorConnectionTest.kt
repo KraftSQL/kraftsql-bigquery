@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
+import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
@@ -89,5 +90,17 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["parsed_value"] shouldBe "foo"
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery's JsonValueArray function`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow(emptyMap()))),
+                columns = listOf(Projection(JsonValueArray(Constant("['foo']")), "parsed_value")),
+            ), DataRow::class
+        )
+
+        result.single()["parsed_value"] shouldBe arrayOf("foo")
     }
 }

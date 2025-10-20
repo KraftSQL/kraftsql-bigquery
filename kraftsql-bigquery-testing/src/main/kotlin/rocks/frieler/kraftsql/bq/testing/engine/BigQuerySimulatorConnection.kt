@@ -1,11 +1,9 @@
 package rocks.frieler.kraftsql.bq.testing.engine
 
-import com.jayway.jsonpath.JsonPath
 import org.apache.commons.csv.CSVFormat
 import rocks.frieler.kraftsql.bq.dml.LoadData
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
@@ -14,7 +12,6 @@ import rocks.frieler.kraftsql.dml.Delete
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.dml.RollbackTransaction
 import rocks.frieler.kraftsql.dql.Select
-import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.objects.Table
 import rocks.frieler.kraftsql.testing.engine.EngineState
@@ -31,11 +28,11 @@ import kotlin.reflect.typeOf
  */
 class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(orm = BigQuerySimulatorORMapping) {
     private var sessionMode = false
-    private var activeSession : SessionState? = null
+    private var activeSession: SessionState? = null
 
     private class SessionState(
         private val parent: EngineState<BigQueryEngine>,
-    ): EngineState<BigQueryEngine>() {
+    ) : EngineState<BigQueryEngine>() {
         override fun containsTable(name: String): Boolean {
             return super.containsTable(name) || parent.containsTable(name)
         }
@@ -70,7 +67,9 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
     }
 
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {
-        if (sessionMode) { ensureSession() }
+        if (sessionMode) {
+            ensureSession()
+        }
         return super.execute(select, type)
     }
 
@@ -89,12 +88,16 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
     }
 
     override fun execute(insertInto: InsertInto<BigQueryEngine, *>): Int {
-        if (sessionMode) { ensureSession() }
+        if (sessionMode) {
+            ensureSession()
+        }
         return super.execute(insertInto)
     }
 
     override fun execute(delete: Delete<BigQueryEngine>): Int {
-        if (sessionMode) { ensureSession() }
+        if (sessionMode) {
+            ensureSession()
+        }
         return super.execute(delete)
     }
 
@@ -107,7 +110,9 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         }
 
         check(loadData.table !is TemporaryTable<*> || sessionMode) { "Loading data into a temporary table would require a session, but session mode is turned off." }
-        if (sessionMode) { ensureSession() }
+        if (sessionMode) {
+            ensureSession()
+        }
 
         if (loadData.overwrite) {
             if (topState.containsTable(loadData.table.qualifiedName)) {
@@ -131,20 +136,25 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
                 val records = csvFormat.parse(file).stream()
                 records
                     .skip(loadData.fileSource.skipLeadingRows?.toLong() ?: 0)
-                    .map { record -> DataRow(table.columns.associate { tableColumn -> tableColumn.name to
-                        loadData.columns!!
-                            .find { column -> column.name == tableColumn.name }
-                            ?.let { dataColumn -> record[dataColumn.name] }
-                            .let { stringValue -> when(tableColumn.type.naturalKType()) {
-                                typeOf<Boolean>() -> stringValue?.toBoolean()
-                                typeOf<Long>() -> stringValue?.toLong()
-                                typeOf<BigDecimal>() -> stringValue?.toBigDecimal()
-                                typeOf<Instant>() -> stringValue?.let { Instant.parse(it) }
-                                typeOf<LocalDate>() -> stringValue?.let { LocalDate.parse(it) }
-                                typeOf<String>() -> stringValue
-                                else -> throw NotImplementedError("Loading data into a column of type '${tableColumn.type}' is not yet supported.")
-                            }}
-                    })}
+                    .map { record ->
+                        DataRow(table.columns.associate { tableColumn ->
+                            tableColumn.name to
+                                    loadData.columns!!
+                                        .find { column -> column.name == tableColumn.name }
+                                        ?.let { dataColumn -> record[dataColumn.name] }
+                                        .let { stringValue ->
+                                            when (tableColumn.type.naturalKType()) {
+                                                typeOf<Boolean>() -> stringValue?.toBoolean()
+                                                typeOf<Long>() -> stringValue?.toLong()
+                                                typeOf<BigDecimal>() -> stringValue?.toBigDecimal()
+                                                typeOf<Instant>() -> stringValue?.let { Instant.parse(it) }
+                                                typeOf<LocalDate>() -> stringValue?.let { LocalDate.parse(it) }
+                                                typeOf<String>() -> stringValue
+                                                else -> throw NotImplementedError("Loading data into a column of type '${tableColumn.type}' is not yet supported.")
+                                            }
+                                        }
+                        })
+                    }
                     .forEach { data.add(it) }
             }
         }
@@ -159,7 +169,9 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
 
     override fun setSessionMode(sessionMode: Boolean) {
         if (!sessionMode && activeSession != null) {
-            if (topState is TransactionStateOverlay<BigQueryEngine>) { execute(RollbackTransaction()) }
+            if (topState is TransactionStateOverlay<BigQueryEngine>) {
+                execute(RollbackTransaction())
+            }
             activeSession = null
         }
         this.sessionMode = sessionMode
@@ -177,16 +189,6 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
         registerExpressionSimulator(JsonValueSimulator())
+        registerExpressionSimulator(JsonValueArraySimulator())
     }
-
-    override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
-        when (expression) {
-            is JsonValueArray -> { row ->
-                val jsonString = simulateExpression(expression.jsonString).invoke(row).let { if (it.isNullOrBlank()) "[]" else it }
-                val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
-                @Suppress("UNCHECKED_CAST")
-                JsonPath.read<List<Any>>(jsonString, jsonPath ?: "$").map { it.toString() }.toTypedArray() as T?
-            }
-            else -> super.simulateExpression(expression)
-        }
 }
