@@ -7,11 +7,13 @@ import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Struct
+import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
 import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.objects.DataRow
+import java.time.Instant
 
 class BigQuerySimulatorConnectionTest {
     private val connection = BigQuerySimulatorConnection()
@@ -62,5 +64,17 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["greeting"] shouldBe "Hello KraftSQL!"
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery Timestamp`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow(emptyMap()))),
+                columns = listOf(Projection(Timestamp(Constant("2008-12-25T15:30:00Z")), "timestamp")),
+            ), DataRow::class
+        )
+
+        result.single()["timestamp"] shouldBe Instant.parse("2008-12-25T15:30:00Z")
     }
 }

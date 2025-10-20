@@ -7,7 +7,6 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
-import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
@@ -32,8 +31,6 @@ import kotlin.reflect.typeOf
  * [rocks.frieler.kraftsql.testing.engine.SimulatorConnection] for the [BigQueryEngine].
  */
 class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(orm = BigQuerySimulatorORMapping) {
-    private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
-
     private var sessionMode = false
     private var activeSession : SessionState? = null
 
@@ -179,24 +176,11 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
         registerExpressionSimulator(StructSimulator())
         registerExpressionSimulator(ReplaceSimulator())
+        registerExpressionSimulator(TimestampSimulator())
     }
 
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
         when (expression) {
-            is Timestamp -> { row ->
-                val timestamp = simulateExpression(expression.stringExpression).invoke(row)
-                @Suppress("UNCHECKED_CAST")
-                timestamp?.let {
-                    val matcher = timestampLiteralPattern.matcher(it)
-                    if (!matcher.matches()) {
-                        throw IllegalArgumentException("invalid timestamp format: $it")
-                    }
-                    val canonicalTimestamp = "${matcher.group("date")}" +
-                            "T${matcher.group("time") ?: "00:00:00.000000"}" +
-                            (matcher.group("tz").trim().ifEmpty { null } ?: "Z")
-                    Instant.parse(canonicalTimestamp)
-                } as T?
-            }
             is JsonValue -> { row ->
                 val jsonString = simulateExpression(expression.jsonString).invoke(row)
                 val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
