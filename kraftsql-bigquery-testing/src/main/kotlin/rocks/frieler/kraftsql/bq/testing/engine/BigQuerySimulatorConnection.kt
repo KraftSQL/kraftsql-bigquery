@@ -5,7 +5,6 @@ import org.apache.commons.csv.CSVFormat
 import rocks.frieler.kraftsql.bq.dml.LoadData
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
@@ -177,16 +176,11 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(StructSimulator())
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
+        registerExpressionSimulator(JsonValueSimulator())
     }
 
     override fun <T> simulateExpression(expression: Expression<BigQueryEngine, T>) : (DataRow) -> T? =
         when (expression) {
-            is JsonValue -> { row ->
-                val jsonString = simulateExpression(expression.jsonString).invoke(row)
-                val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
-                @Suppress("UNCHECKED_CAST")
-                JsonPath.read<String>(jsonString, jsonPath ?: "$") as T?
-            }
             is JsonValueArray -> { row ->
                 val jsonString = simulateExpression(expression.jsonString).invoke(row).let { if (it.isNullOrBlank()) "[]" else it }
                 val jsonPath = expression.jsonPath?.let { simulateExpression(it).invoke(row) }
