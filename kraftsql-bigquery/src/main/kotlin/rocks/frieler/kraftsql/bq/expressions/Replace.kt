@@ -4,6 +4,14 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.expressions.Expression
 import java.util.Objects
 
+/**
+ * BigQuery's [`REPLACE()`](https://cloud.google.com/bigquery/docs/reference/standard-sql/string_functions#replace)
+ * function.
+ *
+ * @param originalValue the value to replace in
+ * @param fromPattern the pattern to replace
+ * @param toPattern the replacement pattern
+ */
 class Replace(
     val originalValue: Expression<BigQueryEngine, String>,
     val fromPattern: Expression<BigQueryEngine, String>,

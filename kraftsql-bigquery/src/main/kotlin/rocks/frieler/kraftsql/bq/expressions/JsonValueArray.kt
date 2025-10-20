@@ -4,6 +4,11 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.expressions.Expression
 import java.util.Objects
 
+/**
+ * BigQuery's
+ * [`JSON_VALUE_ARRAY()`](https://cloud.google.com/bigquery/docs/reference/standard-sql/json_functions#json_value_array)
+ * function.
+ */
 class JsonValueArray(
     val jsonString: Expression<BigQueryEngine, String>,
     val jsonPath: Expression<BigQueryEngine, String>? = null,
