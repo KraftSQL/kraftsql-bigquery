@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.2.20"
-dokka = "2.0.0"
+dokka = "2.1.0"
 maven-publish-plugin = "0.34.0"
 sonarqube = "7.0.0.6105"
 kraftsql-core = "0.0.7-SNAPSHOT"
