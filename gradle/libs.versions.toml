@@ -10,7 +10,7 @@ apache-commons-csv = "1.14.1"
 slf4j = "2.0.17"
 junit = "6.0.0"
 junit-platform = "6.0.0"
-kotest = "6.0.3"
+kotest = "6.0.4"
 mockito = "6.1.0"
 kover = "0.9.3"
 
