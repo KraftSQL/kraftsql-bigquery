@@ -10,7 +10,7 @@ import rocks.frieler.kraftsql.testing.engine.ExpressionSimulator
 /**
  * Simulator for BigQuery's [JsonValue] function.
  */
-class JsonValueSimulator : ExpressionSimulator<BigQueryEngine, String, JsonValue> {
+class JsonValueSimulator : ExpressionSimulator<BigQueryEngine, String?, JsonValue> {
     override val expression = JsonValue::class
 
     context(subexpressionCallbacks: ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)

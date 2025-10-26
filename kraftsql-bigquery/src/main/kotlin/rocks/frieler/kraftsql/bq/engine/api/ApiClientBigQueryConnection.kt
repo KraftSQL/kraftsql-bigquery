@@ -26,8 +26,15 @@ import rocks.frieler.kraftsql.dml.Delete
 import rocks.frieler.kraftsql.dml.InsertInto
 import rocks.frieler.kraftsql.dml.RollbackTransaction
 import rocks.frieler.kraftsql.dql.Select
+import rocks.frieler.kraftsql.objects.Column
 import kotlin.reflect.KClass
 
+/**
+ * [BigQueryConnection] implementation that uses the
+ * [BigQuery API client](https://docs.cloud.google.com/java/docs/reference/google-cloud-bigquery/latest/overview).
+ *
+ * @param bigquery the [BigQuery] client to use for communication with BigQuery
+ */
 class ApiClientBigQueryConnection(
     private val bigquery: BigQuery,
 ) : BigQueryConnection {
@@ -55,19 +62,22 @@ class ApiClientBigQueryConnection(
             TableId.of(table.dataset, table.name)
         }
 
-        fun constructField(name: String, type: Type<*>): Field =
-            when (type) {
-                // TODO: nullability
-                is Types.ARRAY<*> -> Field.newBuilder(name, type.contentType.name).setMode(Field.Mode.REPEATED)
+        fun constructField(column: Column<BigQueryEngine>): Field {
+            return when (val type = column.type as Type) {
+                is Types.ARRAY<*> -> {
+                    require(!column.nullable) { "Array fields must not be nullable." }
+                    Field.newBuilder(column.name, type.contentType.name)
+                        .setMode(Field.Mode.REPEATED)
+                        .build()
+                }
+                is Types.STRUCT -> Field.newBuilder(column.name, type.name, FieldList.of(type.fields.map { subfield -> constructField(subfield) }))
                     .build()
-                is Types.STRUCT -> Field.newBuilder(
-                    name,
-                    type.name,
-                    FieldList.of(type.fields.map { (subfieldName, subfieldType) -> constructField(subfieldName, subfieldType) })
-                ).build()
-                else -> Field.of(name, type.name)
+                else -> Field.newBuilder(column.name, type.name)
+                    .setMode(if (column.nullable) Field.Mode.NULLABLE else Field.Mode.REQUIRED)
+                    .build()
             }
-        val schema = Schema.of(table.columns.map { column -> constructField(column.name, column.type as Type) })
+        }
+        val schema = Schema.of(table.columns.map { column -> constructField(column) })
 
         val tableInfo = TableInfo.of(tableId, StandardTableDefinition.of(schema))
         bigquery.create(tableInfo)

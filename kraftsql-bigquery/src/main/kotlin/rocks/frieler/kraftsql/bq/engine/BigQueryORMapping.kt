@@ -8,6 +8,7 @@ import rocks.frieler.kraftsql.engine.ORMapping
 import rocks.frieler.kraftsql.engine.ensuredPrimaryConstructor
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.expressions.Row
+import rocks.frieler.kraftsql.objects.Column
 import rocks.frieler.kraftsql.objects.DataRow
 import java.math.BigDecimal
 import java.time.Instant
@@ -18,6 +19,10 @@ import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
 
+/**
+ * [ORMapping] for the [BigQueryEngine].
+ */
+@Suppress()
 object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldValue>>> {
     override fun getTypeFor(type: KType) : Type<*> =
         when {
@@ -33,13 +38,13 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             type in setOf(typeOf<Instant>(), typeOf<Instant?>()) -> Types.TIMESTAMP
             type in setOf(typeOf<LocalDate>(), typeOf<LocalDate?>()) -> Types.DATE
             type.jvmErasure.starProjectedType == Array::class.starProjectedType -> Types.ARRAY(getTypeFor(type.arguments.single().type ?: Any::class.starProjectedType))
-            type.jvmErasure.isData -> Types.STRUCT(type.jvmErasure.ensuredPrimaryConstructor().parameters.associate { param -> param.name!! to getTypeFor(param.type) })
+            type.jvmErasure.isData -> Types.STRUCT(getSchemaFor(type.jvmErasure))
             type in setOf(typeOf<DataRow>(), typeOf<DataRow?>()) -> throw NotImplementedError("BigQuery type for DataRow is not supported, as it would be STRUCT<?>, where DataRow does not provide information about it subfields.")
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
         }
 
-    override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, T> {
-        fun <T : Any> replaceWithBQExpressions(expression: Expression<BigQueryEngine, T>) : Expression<BigQueryEngine, T> =
+    override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, out T?> {
+        fun <T : Any> replaceWithBQExpressions(expression: Expression<BigQueryEngine, out T?>) : Expression<BigQueryEngine, out T?> =
             when (expression) {
                 is rocks.frieler.kraftsql.expressions.Constant -> rocks.frieler.kraftsql.bq.expressions.Constant(expression.value)
                 is Row -> Struct(
@@ -123,13 +128,13 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
         return when {
             this.mode == Field.Mode.REPEATED -> {
                 if (type.standardType == StandardSQLTypeName.STRUCT) {
-                    Types.ARRAY(Types.STRUCT(this.subFields.associate { subfield -> subfield.name to subfield.getSqlType() }))
+                    Types.ARRAY(Types.STRUCT(this.subFields.map { subfield -> Column(subfield.name, subfield.getSqlType(), subfield.mode == Field.Mode.NULLABLE) }))
                 } else {
                     Types.ARRAY(Types.parseType(type.standardType.name))
                 }
             }
             this.type.standardType == StandardSQLTypeName.STRUCT -> {
-                Types.STRUCT(subFields.associate { subfield -> subfield.name to subfield.getSqlType() })
+                Types.STRUCT(subFields.map { subfield -> Column(subfield.name, subfield.getSqlType(), subfield.mode == Field.Mode.NULLABLE) })
             }
             else -> Types.parseType(this.type.standardType.name)
         }

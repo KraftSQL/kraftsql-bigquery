@@ -11,5 +11,5 @@ import kotlin.reflect.KClass
  */
 class StructSimulator : RowSimulator<BigQueryEngine>() {
     @Suppress("UNCHECKED_CAST")
-    override val expression = Struct::class as KClass<out Struct<DataRow>>
+    override val expression = Struct::class as KClass<out Struct<DataRow?>>
 }

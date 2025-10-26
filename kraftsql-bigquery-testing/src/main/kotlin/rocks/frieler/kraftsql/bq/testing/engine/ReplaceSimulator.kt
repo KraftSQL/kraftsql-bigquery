@@ -9,7 +9,7 @@ import rocks.frieler.kraftsql.testing.engine.ExpressionSimulator
 /**
  * Simulator for BigQuery's [Replace] function.
  */
-class ReplaceSimulator : ExpressionSimulator<BigQueryEngine, String, Replace> {
+class ReplaceSimulator : ExpressionSimulator<BigQueryEngine, String?, Replace> {
     override val expression = Replace::class
 
     context(subexpressionCallbacks: ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)

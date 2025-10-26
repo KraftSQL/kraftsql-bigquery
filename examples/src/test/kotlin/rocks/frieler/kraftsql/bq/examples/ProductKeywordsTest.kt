@@ -10,9 +10,8 @@ import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.bq.examples.data.Category
 import rocks.frieler.kraftsql.bq.examples.data.Product
 import rocks.frieler.kraftsql.dql.QuerySource
-import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.dql.execute
-import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.bq.testing.WithBigQuerySimulator
@@ -25,10 +24,10 @@ class ProductKeywordsTest {
     fun `collectProductKeywords() can handle empty data`() {
         val products = ConstantData<Product>()
 
-        val keywords = Select<DataRow>(
-            QuerySource(collectProductKeywords(products)),
-            columns = listOf(Projection(Column("keywords"))),
-        ).execute()
+        val keywords = Select<DataRow> {
+            val source = from(QuerySource(collectProductKeywords(products)))
+            column(Projection(source["keywords"]))
+        }.execute()
 
         keywords.shouldBeEmpty()
     }
@@ -40,10 +39,10 @@ class ProductKeywordsTest {
             Product(2, "Lemon", food, tags = arrayOf("sour")),
         )
 
-        val keywords = Select<DataRow>(
-            QuerySource(collectProductKeywords(products)),
-            columns = listOf(Projection(Column("keywords"))),
-        ).execute()
+        val keywords = Select<DataRow> {
+            val source = from(QuerySource(collectProductKeywords(products)))
+            column(Projection(source["keywords"]))
+        }.execute()
 
         keywords.shouldContainAll(
             DataRow(mapOf("keywords" to arrayOf("Chocolate", "Food", "sweets"))),
