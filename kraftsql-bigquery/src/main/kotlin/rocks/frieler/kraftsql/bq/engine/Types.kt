@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.bq.engine
 
 import com.google.cloud.bigquery.StandardSQLTypeName
+import rocks.frieler.kraftsql.objects.Column
 import rocks.frieler.kraftsql.objects.DataRow
 import java.math.BigDecimal
 import java.time.Instant
@@ -9,6 +10,11 @@ import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.typeOf
 
+/**
+ * The [Type]s of BigQuery.
+ *
+ * See [Standard SQL data types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types).
+ */
 object Types {
 
     val STRING = Type<String>(StandardSQLTypeName.STRING, typeOf<String>())
@@ -36,8 +42,13 @@ object Types {
         }
     }
 
-    class STRUCT(val fields: Map<String, Type<*>>) : Type<DataRow>(StandardSQLTypeName.STRUCT, typeOf<DataRow>()) {
-        override fun sql() = "STRUCT<${fields.entries.joinToString(",") { (name, type) -> "$name ${type.sql()}"} }>"
+    /**
+     * BigQuery's [STRUCT type](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#struct_type).
+     *
+     * @param fields the subfields of the STRUCT
+     */
+    class STRUCT(val fields: List<Column<BigQueryEngine>>) : Type<DataRow>(StandardSQLTypeName.STRUCT, typeOf<DataRow>()) {
+        override fun sql() = "STRUCT<${fields.joinToString(",") { column -> "${column.name} ${column.type.sql()}"} }>"
 
         companion object {
             val matcher = "^STRUCT<.+>$".toRegex()
@@ -46,7 +57,7 @@ object Types {
                 type.removePrefix("STRUCT<").removeSuffix(">")
                     .split(",") // FIXME: handle nested structs
                     .map { it.trim().split(" +".toRegex(), limit = 2) }
-                    .associate { (name, type) -> name to parseType(type) }
+                    .map { (name, type) -> Column(name, parseType(type), nullable = true) } // TODO: can we detect non-nullable sub-fields?
             )
         }
     }
