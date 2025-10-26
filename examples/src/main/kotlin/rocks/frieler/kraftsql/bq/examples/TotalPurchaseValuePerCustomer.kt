@@ -11,6 +11,7 @@ import rocks.frieler.kraftsql.expressions.Sum
 import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.expressions.knownNotNull
 import rocks.frieler.kraftsql.objects.Data
 import java.math.BigDecimal
 
@@ -29,8 +30,8 @@ fun aggregatePurchaseValuePerCustomer(customers: Data<BigQueryEngine, Customer>,
         from(purchases)
         val customers = innerJoin(customers `as` "customers") { this[Customer::id] `=` purchases[Purchase::customerId] }
         columns(
-            customers[Customer::id] `as` CustomerPurchaseValue::customerId.name,
-            Sum.Companion(purchases[Purchase::totalPrice]) `as` CustomerPurchaseValue::totalAmount.name,
+            customers[Customer::id] `as` CustomerPurchaseValue::customerId,
+            Sum.Companion(purchases[Purchase::totalPrice]).knownNotNull() `as` CustomerPurchaseValue::totalAmount,
         )
         groupBy(customers[Customer::id])
     }
