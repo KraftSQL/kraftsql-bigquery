@@ -10,9 +10,9 @@ import java.util.Objects
  * function.
  */
 class JsonValueArray(
-    val jsonString: Expression<BigQueryEngine, String>,
-    val jsonPath: Expression<BigQueryEngine, String>? = null,
-) : Expression<BigQueryEngine, Array<String>> {
+    val jsonString: Expression<BigQueryEngine, String?>,
+    val jsonPath: Expression<BigQueryEngine, String?>? = null,
+) : Expression<BigQueryEngine, Array<String>?> {
     override fun sql() =
         "JSON_VALUE_ARRAY(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 

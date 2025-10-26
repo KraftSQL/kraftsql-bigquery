@@ -12,7 +12,7 @@ import java.time.ZoneId
 /**
  * Simulator for BigQuery's [Timestamp] expression.
  */
-class TimestampSimulator : ExpressionSimulator<BigQueryEngine, Instant, Timestamp> {
+class TimestampSimulator : ExpressionSimulator<BigQueryEngine, Instant?, Timestamp> {
     override val expression = Timestamp::class
 
     private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()

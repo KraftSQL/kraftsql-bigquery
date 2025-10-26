@@ -10,8 +10,8 @@ import java.math.BigDecimal
  *
  * @param <T> the Kotlin type of the [Constant] value
  * @param value the constant value
- */open class Constant<T : Any>(
-    value: T?,
+ */open class Constant<T>(
+    value: T,
 ) : Constant<BigQueryEngine, T>(value) {
     override fun sql(): String {
         return when (value) {

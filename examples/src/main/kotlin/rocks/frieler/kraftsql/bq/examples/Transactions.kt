@@ -24,7 +24,7 @@ fun main() {
 
         try {
             transaction {
-                Delete(table, table.get<Int>("number") `=` Constant(1)).execute()
+                Delete(table, table["number"] `=` Constant(1)).execute()
                 DataRow(mapOf("number" to 3, "foo" to "bar")).insertInto(table)
             }
         } catch (e: Exception) {

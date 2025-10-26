@@ -12,8 +12,8 @@ import java.time.Instant
  * [TIMESTAMP][rocks.frieler.kraftsql.bq.engine.Types.TIMESTAMP]
  */
 class Timestamp(
-    val stringExpression: Expression<BigQueryEngine, String>,
-) : Expression<BigQueryEngine, Instant> {
+    val stringExpression: Expression<BigQueryEngine, String?>,
+) : Expression<BigQueryEngine, Instant?> {
     override fun sql(): String =
         "TIMESTAMP(${stringExpression.sql()})"
 

@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
+import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
@@ -25,7 +26,7 @@ class BigQuerySimulatorConnectionTest {
         val result = connection.execute(
             Select(
                 source = QuerySource(ConstantData(DataRow(mapOf("name" to "foo")))),
-                columns = listOf(Projection(Column("name"))),
+                columns = listOf(Projection(Column<BigQueryEngine, String>("name"))),
             ), DataRow::class
         )
 

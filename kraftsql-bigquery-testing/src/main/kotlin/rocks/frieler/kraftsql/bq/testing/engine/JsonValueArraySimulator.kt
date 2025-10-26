@@ -11,7 +11,7 @@ import kotlin.text.isNullOrBlank
 /**
  * Simulator for BigQuery's [JsonValueArray] function.
  */
-class JsonValueArraySimulator : ExpressionSimulator<BigQueryEngine, Array<String>, JsonValueArray> {
+class JsonValueArraySimulator : ExpressionSimulator<BigQueryEngine, Array<String>?, JsonValueArray> {
     override val expression = JsonValueArray::class
 
     context(subexpressionCallbacks: ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)

@@ -13,10 +13,10 @@ import java.util.Objects
  * @param toPattern the replacement pattern
  */
 class Replace(
-    val originalValue: Expression<BigQueryEngine, String>,
-    val fromPattern: Expression<BigQueryEngine, String>,
-    val toPattern: Expression<BigQueryEngine, String>,
-) : Expression<BigQueryEngine, String> {
+    val originalValue: Expression<BigQueryEngine, String?>,
+    val fromPattern: Expression<BigQueryEngine, String?>,
+    val toPattern: Expression<BigQueryEngine, String?>,
+) : Expression<BigQueryEngine, String?> {
 
     override fun sql() =
         "REPLACE(${originalValue.sql()}, ${fromPattern.sql()}, ${toPattern.sql()})"

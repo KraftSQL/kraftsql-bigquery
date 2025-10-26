@@ -12,9 +12,9 @@ import java.util.Objects
  * @param jsonPath optional JSONPath expression to select a certain node in the JSON document
  */
 class JsonValue(
-    val jsonString: Expression<BigQueryEngine, String>,
-    val jsonPath: Expression<BigQueryEngine, String>? = null,
-) : Expression<BigQueryEngine, String> {
+    val jsonString: Expression<BigQueryEngine, String?>,
+    val jsonPath: Expression<BigQueryEngine, String?>? = null,
+) : Expression<BigQueryEngine, String?> {
     override fun sql() =
         "JSON_VALUE(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 
