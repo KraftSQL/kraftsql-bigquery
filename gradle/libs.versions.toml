@@ -2,7 +2,7 @@
 kotlin = "2.2.20"
 dokka = "2.1.0"
 maven-publish-plugin = "0.34.0"
-sonarqube = "7.0.0.6105"
+sonarqube = "7.0.1.6134"
 kraftsql-core = "0.0.8-SNAPSHOT"
 google-cloud-libraries = "26.70.0"
 jsonpath = "2.9.0"
