@@ -24,17 +24,28 @@ class JsonValueArraySimulatorTest {
         result shouldBe emptyArray()
     }
 
-
     @Test
-    fun `JsonValueArraySimulator parses arrays scalar values as string array`() {
+    fun `JsonValueArraySimulator parses array of string values as string array`() {
         val simulation = context(subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
-                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[\"foo\"]" } },
+                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[\"foo\", \"bar\"]" } },
             ))
         }
         val result = simulation(mock())
 
-        result shouldBe arrayOf("foo")
+        result shouldBe arrayOf("foo", "bar")
+    }
+
+    @Test
+    fun `JsonValueArraySimulator parses array of scalar values of various types as string array`() {
+        val simulation = context(subexpressionCallbacks) {
+            JsonValueArraySimulator().simulateExpression(JsonValueArray(
+                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[\"foo\", true, 42]" } },
+            ))
+        }
+        val result = simulation(mock())
+
+        result shouldBe arrayOf("foo", "true", "42")
     }
 
     @Test
