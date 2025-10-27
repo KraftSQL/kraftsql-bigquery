@@ -25,7 +25,7 @@ class JsonValueSimulatorTest {
     }
 
     @Test
-    fun `JsonValueSimulator parses scalar JSON value as string`() {
+    fun `JsonValueSimulator parses scalar string JSON value as string`() {
         val simulation = context(subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "foo" } },
@@ -34,6 +34,18 @@ class JsonValueSimulatorTest {
         val result = simulation(mock())
 
         result shouldBe "foo"
+    }
+
+    @Test
+    fun `JsonValueSimulator parses scalar non-string JSON value as string`() {
+        val simulation = context(subexpressionCallbacks) {
+            JsonValueSimulator().simulateExpression(JsonValue(
+                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "true" } },
+            ))
+        }
+        val result = simulation(mock())
+
+        result shouldBe "true"
     }
 
     @Test
