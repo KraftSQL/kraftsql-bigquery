@@ -32,7 +32,7 @@ class JsonValueArraySimulator : ExpressionSimulator<BigQueryEngine, Array<String
         jsonString
             .let { if (it.isNullOrBlank()) "[]" else it }
             .let { JsonPath.read<List<Any>>(it, jsonPath ?: "$") as? List }
-            ?.takeIf { it.all { element -> element is String } }
-            ?.map { it as String }
+            ?.takeIf { it.all { element -> element::class.javaPrimitiveType != null || element is String } }
+            ?.map { it.toString() }
             ?.toTypedArray()
 }
