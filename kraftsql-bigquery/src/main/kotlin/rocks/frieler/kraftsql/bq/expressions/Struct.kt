@@ -11,7 +11,7 @@ import rocks.frieler.kraftsql.expressions.Row
  *
  * @param <T> Kotlin type of the [Struct]'s value
  */
-class Struct<T : Any>(values: Map<String, Expression<BigQueryEngine, *>>?) : Row<BigQueryEngine, T>(values) {
+class Struct<T>(values: Map<String, Expression<BigQueryEngine, *>>?) : Row<BigQueryEngine, T>(values) {
     override fun sql(): String {
         if (values == null) {
             return "NULL"

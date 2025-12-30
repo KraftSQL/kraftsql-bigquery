@@ -50,7 +50,7 @@ class BigQuerySimulatorConnectionTest {
         val result = connection.execute(
             Select(
                 source = QuerySource(ConstantData(DataRow(emptyMap()))),
-                columns = listOf(Projection(Struct(mapOf("number" to Constant(42))), "struct")),
+                columns = listOf(Projection(Struct<DataRow>(mapOf("number" to Constant(42))), "struct")),
             ), DataRow::class
         )
 
