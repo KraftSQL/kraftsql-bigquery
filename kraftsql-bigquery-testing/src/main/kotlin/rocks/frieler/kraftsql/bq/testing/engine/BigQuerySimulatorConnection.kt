@@ -137,7 +137,7 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
                 records
                     .skip(loadData.fileSource.skipLeadingRows?.toLong() ?: 0)
                     .map { record ->
-                        DataRow(table.columns.associate { tableColumn ->
+                        DataRow(table.columns.map { tableColumn ->
                             tableColumn.name to
                                     loadData.columns!!
                                         .find { column -> column.name == tableColumn.name }
