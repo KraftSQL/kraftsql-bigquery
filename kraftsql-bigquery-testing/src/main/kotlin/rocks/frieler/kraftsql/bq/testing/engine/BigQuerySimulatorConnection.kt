@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat
 import rocks.frieler.kraftsql.bq.dml.LoadData
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.expressions.ArrayConcat
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
@@ -14,6 +15,7 @@ import rocks.frieler.kraftsql.dml.RollbackTransaction
 import rocks.frieler.kraftsql.dql.Select
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.objects.Table
+import rocks.frieler.kraftsql.testing.engine.ArrayConcatenationSimulator
 import rocks.frieler.kraftsql.testing.engine.EngineState
 import rocks.frieler.kraftsql.testing.engine.GenericSimulatorConnection
 import java.io.FileReader
@@ -188,6 +190,8 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(StructSimulator())
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
+        @Suppress("UNCHECKED_CAST")
+        registerExpressionSimulator(ArrayConcatenationSimulator(ArrayConcat::class as KClass<out ArrayConcat<Any?>>))
         registerExpressionSimulator(JsonValueSimulator())
         registerExpressionSimulator(JsonValueArraySimulator())
     }

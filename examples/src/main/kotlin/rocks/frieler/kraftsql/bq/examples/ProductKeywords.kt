@@ -7,10 +7,9 @@ import rocks.frieler.kraftsql.bq.examples.data.products
 import rocks.frieler.kraftsql.bq.ddl.create
 import rocks.frieler.kraftsql.bq.ddl.drop
 import rocks.frieler.kraftsql.bq.dml.insertInto
-import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.bq.objects.ConstantData
+import rocks.frieler.kraftsql.bq.expressions.ArrayConcat
 import rocks.frieler.kraftsql.bq.objects.collect
 import rocks.frieler.kraftsql.objects.Data
 import rocks.frieler.kraftsql.objects.DataRow
@@ -41,20 +40,12 @@ fun collectProductKeywords(products: Data<BigQueryEngine, Product>) =
     Select<DataRow> {
         from(products)
         columns(
-            rocks.frieler.kraftsql.expressions.Array(
-                products[Product::name],
-                products[Product::category][Category::name]
-            ) `as` "part1",
-            products[Product::tags] `as` "part2",
+            ArrayConcat(
+                rocks.frieler.kraftsql.expressions.Array(products[Product::name], products[Product::category][Category::name]),
+                products[Product::tags],
+            ) `as` "keywords",
         )
     }
-        .execute()
-        .map {
-            // TODO: Concat arrays in SQL, once this is implemented.
-            @Suppress("UNCHECKED_CAST")
-            DataRow("keywords" to (it["part1"] as Array<String> + it["part2"] as Array<String>))
-        }
-        .let { result -> if (result.isNotEmpty()) ConstantData(result) else ConstantData.empty(listOf("keywords")) }
 
 fun countKeywords(words: Data<BigQueryEngine, DataRow>): Map<String, Long> {
     val wordCounts = words.collect()
