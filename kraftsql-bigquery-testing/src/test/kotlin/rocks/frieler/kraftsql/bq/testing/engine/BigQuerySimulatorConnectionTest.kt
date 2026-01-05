@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.expressions.ArrayConcat
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
@@ -14,6 +15,7 @@ import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
+import rocks.frieler.kraftsql.expressions.Array
 import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.objects.DataRow
 import java.time.Instant
@@ -79,6 +81,20 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["timestamp"] shouldBe Instant.parse("2008-12-25T15:30:00Z")
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate BigQuery's ArrayConcat function`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow())),
+                columns = listOf(Projection(
+                    ArrayConcat(Array(Constant(1), Constant(2)), Array(Constant(3), Constant(4))),
+                    "concatenated_array")),
+            ), DataRow::class
+        )
+
+        result.single()["concatenated_array"] shouldBe arrayOf(1, 2, 3, 4)
     }
 
     @Test
