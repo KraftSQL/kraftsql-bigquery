@@ -1,6 +1,5 @@
 package rocks.frieler.kraftsql.bq.examples
 
-import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dsl.`as`
 import rocks.frieler.kraftsql.bq.examples.data.Category
 import rocks.frieler.kraftsql.bq.examples.data.Product
@@ -12,6 +11,7 @@ import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.objects.ConstantData
+import rocks.frieler.kraftsql.bq.objects.collect
 import rocks.frieler.kraftsql.objects.Data
 import rocks.frieler.kraftsql.objects.DataRow
 
@@ -57,10 +57,7 @@ fun collectProductKeywords(products: Data<BigQueryEngine, Product>) =
         .let { result -> if (result.isNotEmpty()) ConstantData(result) else ConstantData.empty(listOf("keywords")) }
 
 fun countKeywords(words: Data<BigQueryEngine, DataRow>): Map<String, Long> {
-    val wordCounts = Select<DataRow> {
-        from(words)
-        columns(Projection(words["keywords"]))
-    }.execute()
+    val wordCounts = words.collect()
         .map { row ->
             @Suppress("UNCHECKED_CAST")
             row["keywords"] as Array<String>
