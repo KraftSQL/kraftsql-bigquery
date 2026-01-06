@@ -43,8 +43,8 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             else -> throw NotImplementedError("Unsupported Kotlin type $type")
         }
 
-    override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, out T?> {
-        fun <T : Any> replaceWithBQExpressions(expression: Expression<BigQueryEngine, out T?>) : Expression<BigQueryEngine, out T?> =
+    override fun <T : Any> serialize(value: T?): Expression<BigQueryEngine, T?> {
+        fun <T : Any> replaceWithBQExpressions(expression: Expression<BigQueryEngine, T?>) : Expression<BigQueryEngine, T?> =
             when (expression) {
                 is rocks.frieler.kraftsql.expressions.Constant -> rocks.frieler.kraftsql.bq.expressions.Constant(expression.value)
                 is Row -> Struct(

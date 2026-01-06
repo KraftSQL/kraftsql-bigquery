@@ -185,7 +185,7 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
 
     init {
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Constant::class)
-        registerExpressionSimulator(ConstantSimulator())
+        registerExpressionSimulator(ConstantSimulator<Any>())
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
         registerExpressionSimulator(StructSimulator())
         registerExpressionSimulator(ReplaceSimulator())
