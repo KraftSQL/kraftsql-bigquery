@@ -18,7 +18,7 @@ class TotalPurchaseValuePerCustomerTest {
     private val country = Country("XX", "XXX")
 
     @Test
-    fun `aggregates total purchase value per Customer`() {
+    fun `aggregates all purchases per Customer`() {
         val customer1 = Customer(1, country, LocalDate.EPOCH)
         val customer2 = Customer(2, country, LocalDate.EPOCH)
         val customers = ConstantData(customer1, customer2)
@@ -34,9 +34,11 @@ class TotalPurchaseValuePerCustomerTest {
             .collect()
 
         (customerPurchaseValues.filterForOne { it.customerId shouldBe customer1.id }).also {
+            it.purchases shouldBe 2
             it.totalAmount shouldBe BigDecimal("3.00")
         }
         (customerPurchaseValues.filterForOne { it.customerId shouldBe customer2.id }).also {
+            it.purchases shouldBe 2
             it.totalAmount shouldBe BigDecimal("30.00")
         }
     }
@@ -52,6 +54,7 @@ class TotalPurchaseValuePerCustomerTest {
             .collect()
 
         (customerPurchaseValues.filterForOne { it.customerId shouldBe customer.id }).also {
+            it.purchases shouldBe 0L
             it.totalAmount shouldBe BigDecimal.ZERO
         }
     }

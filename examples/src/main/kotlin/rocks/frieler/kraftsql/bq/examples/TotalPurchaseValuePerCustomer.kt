@@ -13,6 +13,7 @@ import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.objects.Data
 import rocks.frieler.kraftsql.bq.objects.collect
 import rocks.frieler.kraftsql.expressions.Coalesce
+import rocks.frieler.kraftsql.expressions.Count
 import java.math.BigDecimal
 
 fun main() {
@@ -23,7 +24,7 @@ fun main() {
     }
 }
 
-data class CustomerPurchaseValue(val customerId: Long, val totalAmount: BigDecimal)
+data class CustomerPurchaseValue(val customerId: Long, val purchases: Long, val totalAmount: BigDecimal)
 
 fun aggregatePurchaseValuePerCustomer(customers: Data<Customer>, purchases: Data<Purchase>) : Data<CustomerPurchaseValue> =
     Select {
@@ -31,6 +32,7 @@ fun aggregatePurchaseValuePerCustomer(customers: Data<Customer>, purchases: Data
         val p = leftJoin(purchases `as` "p") { this[Purchase::customerId] `=` c[Customer::id] }
         columns(
             c[Customer::id] `as` CustomerPurchaseValue::customerId,
+            Count(p[Purchase::id]) `as` CustomerPurchaseValue::purchases,
             Coalesce(
                 Sum(p[Purchase::totalPrice]),
                 nonNullableExpression = Constant(BigDecimal.ZERO),
