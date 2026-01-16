@@ -8,30 +8,33 @@ import rocks.frieler.kraftsql.bq.examples.data.purchases
 import rocks.frieler.kraftsql.bq.examples.data.withSampleData
 import rocks.frieler.kraftsql.expressions.`=`
 import rocks.frieler.kraftsql.expressions.Sum
-import rocks.frieler.kraftsql.bq.dql.execute
 import rocks.frieler.kraftsql.bq.dsl.Select
-import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.expressions.knownNotNull
-import rocks.frieler.kraftsql.objects.Data
+import rocks.frieler.kraftsql.bq.expressions.Constant
+import rocks.frieler.kraftsql.bq.objects.Data
+import rocks.frieler.kraftsql.bq.objects.collect
+import rocks.frieler.kraftsql.expressions.Coalesce
 import java.math.BigDecimal
 
 fun main() {
     withSampleData {
         aggregatePurchaseValuePerCustomer(customers, purchases)
-            .execute()
+            .collect()
             .forEach { println(it) }
     }
 }
 
 data class CustomerPurchaseValue(val customerId: Long, val totalAmount: BigDecimal)
 
-fun aggregatePurchaseValuePerCustomer(customers: Data<BigQueryEngine, Customer>, purchases: Data<BigQueryEngine, Purchase>) =
-    Select<CustomerPurchaseValue> {
-        from(purchases)
-        val customers = innerJoin(customers `as` "customers") { this[Customer::id] `=` purchases[Purchase::customerId] }
+fun aggregatePurchaseValuePerCustomer(customers: Data<Customer>, purchases: Data<Purchase>) : Data<CustomerPurchaseValue> =
+    Select {
+        val c = from(customers `as` "c")
+        val p = leftJoin(purchases `as` "p") { this[Purchase::customerId] `=` c[Customer::id] }
         columns(
-            customers[Customer::id] `as` CustomerPurchaseValue::customerId,
-            Sum.Companion(purchases[Purchase::totalPrice]).knownNotNull() `as` CustomerPurchaseValue::totalAmount,
+            c[Customer::id] `as` CustomerPurchaseValue::customerId,
+            Coalesce(
+                Sum(p[Purchase::totalPrice]),
+                nonNullableExpression = Constant(BigDecimal.ZERO),
+            ) `as` CustomerPurchaseValue::totalAmount,
         )
-        groupBy(customers[Customer::id])
+        groupBy(c[Customer::id])
     }
