@@ -9,6 +9,7 @@ import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
+import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.expressions.Expression
 
 class BigQuerySubexpressionCollectorTest {
@@ -76,5 +77,14 @@ class BigQuerySubexpressionCollectorTest {
         val subexpressions = subexpressionCollector.getSubexpressions(timestamp)
 
         subexpressions shouldContainExactlyInAnyOrder listOf(timestamp.stringExpression)
+    }
+
+    @Test
+    fun `BigQuerySubexpressionCollector collects array expression of Unnest`() {
+        val unnest = Unnest(mock<Expression<BigQueryEngine, Array<Any>>>())
+
+        val subexpressions = subexpressionCollector.getSubexpressions(unnest)
+
+        subexpressions shouldContainExactlyInAnyOrder listOf(unnest.arrayExpression)
     }
 }

@@ -6,6 +6,7 @@ import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
+import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.testing.engine.GenericSubexpressionCollector
 
@@ -20,6 +21,7 @@ class BigQuerySubexpressionCollector : GenericSubexpressionCollector<BigQueryEng
             is JsonValueArray -> listOfNotNull(expression.jsonString, expression.jsonPath)
             is Replace -> listOf(expression.originalValue, expression.fromPattern, expression.toPattern)
             is Timestamp -> listOf(expression.stringExpression)
+            is Unnest<*> -> listOf(expression.arrayExpression)
             else -> super.getSubexpressions(expression)
         }
 }
