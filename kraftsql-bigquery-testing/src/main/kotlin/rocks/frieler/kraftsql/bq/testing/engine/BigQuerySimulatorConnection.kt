@@ -199,5 +199,6 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(ArrayConcatenationSimulator(ArrayConcat::class as KClass<out ArrayConcat<Any?>>))
         registerExpressionSimulator(JsonValueSimulator())
         registerExpressionSimulator(JsonValueArraySimulator())
+        registerExpressionSimulator(UnnestSimulator<Any>())
     }
 }
