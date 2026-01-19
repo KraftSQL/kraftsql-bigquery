@@ -13,7 +13,9 @@ import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
+import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.bq.objects.ConstantData
+import rocks.frieler.kraftsql.dql.DataExpressionData
 import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
@@ -137,5 +139,18 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["parsed_value"] shouldBe arrayOf("foo")
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection can simulate Unnest`() {
+        val result = connection.execute(
+            Select(source = QuerySource(DataExpressionData(Unnest(Array(Constant(1), Constant(2), Constant(3)))), "number")),
+            DataRow::class)
+
+        result shouldContainExactlyInAnyOrder listOf(
+            DataRow("number" to 1),
+            DataRow("number" to 2),
+            DataRow("number" to 3),
+        )
     }
 }
