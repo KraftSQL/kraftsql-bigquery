@@ -13,7 +13,7 @@ class Select<T : Any> : Select<BigQueryEngine, T> {
         source: QuerySource<BigQueryEngine, *>,
         joins: List<Join<BigQueryEngine>> = emptyList(),
         columns: List<Projection<BigQueryEngine, *>>? = null,
-        filter: Expression<BigQueryEngine, Boolean>? = null,
+        filter: Expression<BigQueryEngine, Boolean?>? = null,
         grouping: List<Expression<BigQueryEngine, *>> = emptyList(),
     ) : super(source, joins, columns, filter, grouping)
 }
