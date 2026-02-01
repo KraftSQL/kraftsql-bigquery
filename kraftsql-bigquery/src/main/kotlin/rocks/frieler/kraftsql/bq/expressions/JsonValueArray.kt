@@ -13,6 +13,8 @@ class JsonValueArray(
     val jsonString: Expression<BigQueryEngine, String?>,
     val jsonPath: Expression<BigQueryEngine, String?>? = null,
 ) : Expression<BigQueryEngine, Array<String>?> {
+    override val subexpressions = listOfNotNull(jsonString, jsonPath)
+
     override fun sql() =
         "JSON_VALUE_ARRAY(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 

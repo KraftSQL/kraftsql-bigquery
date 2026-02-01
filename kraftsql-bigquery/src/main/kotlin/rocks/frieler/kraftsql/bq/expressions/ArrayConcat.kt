@@ -15,6 +15,8 @@ import rocks.frieler.kraftsql.expressions.Expression
 class ArrayConcat<T>(
     vararg arrays: Expression<BigQueryEngine, Array<T>?>
 ) : ArrayConcatenation<BigQueryEngine, T>(arrays.toList().toTypedArray()) {
+    override val subexpressions = arrays.toList()
+
     override fun sql() = "ARRAY_CONCAT(${arguments.joinToString(",") { it.sql() }})"
 
     override fun defaultColumnName() =

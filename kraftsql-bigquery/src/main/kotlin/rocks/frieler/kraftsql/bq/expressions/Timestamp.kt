@@ -14,6 +14,8 @@ import java.time.Instant
 class Timestamp(
     val stringExpression: Expression<BigQueryEngine, String?>,
 ) : Expression<BigQueryEngine, Instant?> {
+    override val subexpressions = listOf(stringExpression)
+
     override fun sql(): String =
         "TIMESTAMP(${stringExpression.sql()})"
 

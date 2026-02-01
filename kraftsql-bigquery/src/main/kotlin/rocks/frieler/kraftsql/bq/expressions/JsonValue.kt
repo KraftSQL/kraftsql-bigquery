@@ -15,6 +15,8 @@ class JsonValue(
     val jsonString: Expression<BigQueryEngine, String?>,
     val jsonPath: Expression<BigQueryEngine, String?>? = null,
 ) : Expression<BigQueryEngine, String?> {
+    override val subexpressions = listOfNotNull(jsonString, jsonPath)
+
     override fun sql() =
         "JSON_VALUE(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 

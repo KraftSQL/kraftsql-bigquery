@@ -17,6 +17,7 @@ class Replace(
     val fromPattern: Expression<BigQueryEngine, String?>,
     val toPattern: Expression<BigQueryEngine, String?>,
 ) : Expression<BigQueryEngine, String?> {
+    override val subexpressions = listOf(originalValue, fromPattern, toPattern)
 
     override fun sql() =
         "REPLACE(${originalValue.sql()}, ${fromPattern.sql()}, ${toPattern.sql()})"
