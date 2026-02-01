@@ -59,9 +59,9 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
     }
 
     override fun <T : Any> deserializeQueryResult(queryResult: Iterable<Map<Field, FieldValue>>, type: KClass<T>): List<T> =
-        queryResult.map { row -> deserializeRow(row, type) }
+        queryResult.map { row -> deserializeRow(row, type)!! }
 
-    private fun <T : Any> deserializeRow(row: Map<Field, FieldValue>, type: KClass<T>): T =
+    private fun <T : Any> deserializeRow(row: Map<Field, FieldValue>, type: KClass<T>): T? =
         when {
         type == Integer::class -> {
             @Suppress("UNCHECKED_CAST")
@@ -85,7 +85,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
         }
         type == String::class -> {
             @Suppress("UNCHECKED_CAST")
-            row.values.single().stringValue as T
+            row.values.single().takeIf { !it.isNull }?.stringValue as T?
         }
         type == Instant::class -> {
             @Suppress("UNCHECKED_CAST")
