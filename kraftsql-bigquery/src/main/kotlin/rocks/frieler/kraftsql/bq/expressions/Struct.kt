@@ -16,6 +16,6 @@ class Struct<T>(values: Map<String, Expression<BigQueryEngine, *>>?) : Row<BigQu
         if (values == null) {
             return "NULL"
         }
-        return "STRUCT(${values!!.values.joinToString(", ") { value -> value.sql() }})"
+        return "STRUCT(${values!!.entries.joinToString(", ") { (name, value) -> "${value.sql()} AS `$name`" }})"
     }
 }
