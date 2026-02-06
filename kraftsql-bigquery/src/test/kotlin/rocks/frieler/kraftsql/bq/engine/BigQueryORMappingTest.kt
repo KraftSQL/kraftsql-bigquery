@@ -11,6 +11,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.beOfType
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.objects.Column
+import rocks.frieler.kraftsql.objects.DataRow
 import kotlin.reflect.typeOf
 
 class BigQueryORMappingTest {
@@ -25,6 +26,24 @@ class BigQueryORMappingTest {
             Column("name", Types.STRING, nullable = false),
             Column("value", Types.INT64, nullable = true),
         )
+    }
+
+    @Test
+    fun `deserializeQueryResult can deserialize BOOL value`() {
+        val result = BigQueryORMapping.deserializeQueryResult(listOf(
+            mapOf(Field.of("value", Types.BOOL.name) to FieldValue.of(FieldValue.Attribute.PRIMITIVE, true.toString()))
+        ), DataRow::class)
+
+        result.single()["value"] shouldBe true
+    }
+
+    @Test
+    fun `deserializeQueryResult can deserialize NULL as BOOL value`() {
+        val result = BigQueryORMapping.deserializeQueryResult(listOf(
+            mapOf(Field.of("value", Types.BOOL.name) to FieldValue.of(FieldValue.Attribute.PRIMITIVE, null))
+        ), DataRow::class)
+
+        result.single()["value"] shouldBe null
     }
 
     @Test
