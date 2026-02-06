@@ -188,6 +188,7 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
         registerExpressionSimulator(ConstantSimulator<Any>())
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
         registerExpressionSimulator(StructSimulator())
+        registerExpressionSimulator(AndSimulator())
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
         @Suppress("UNCHECKED_CAST")

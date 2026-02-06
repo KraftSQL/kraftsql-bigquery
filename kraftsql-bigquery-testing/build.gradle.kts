@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.apache.commons.csv)
 
     testImplementation(libs.kotlin.test.junit5)
+    testImplementation(libs.junit.params)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockito)
     testRuntimeOnly(libs.junit5.engine)
