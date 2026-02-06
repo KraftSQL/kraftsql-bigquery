@@ -25,6 +25,8 @@ object Types {
 
     val NUMERIC = Type<Double>(StandardSQLTypeName.NUMERIC, typeOf<Double>())
 
+    val FLOAT64 = Type<Double>(StandardSQLTypeName.FLOAT64, typeOf<Double>())
+
     val BIGNUMERIC = Type<BigDecimal>(StandardSQLTypeName.BIGNUMERIC, typeOf<BigDecimal>())
 
     val TIMESTAMP = Type<Instant>(StandardSQLTypeName.TIMESTAMP, typeOf<Instant>())
@@ -69,6 +71,7 @@ object Types {
         type == BOOL.name.name -> BOOL
         type == INT64.name.name -> INT64
         type == NUMERIC.name.name -> NUMERIC
+        type == FLOAT64.name.name -> FLOAT64
         type == BIGNUMERIC.name.name -> BIGNUMERIC
         type == TIMESTAMP.name.name -> TIMESTAMP
         type == DATE.name.name -> DATE
