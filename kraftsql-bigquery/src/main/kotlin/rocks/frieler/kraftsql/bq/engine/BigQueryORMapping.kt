@@ -33,7 +33,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             type in setOf(typeOf<Int>(), typeOf<Int?>()) -> Types.INT64
             type in setOf(typeOf<Long>(), typeOf<Long?>()) -> Types.INT64
             type in setOf(typeOf<Float>(), typeOf<Float?>()) -> Types.NUMERIC
-            type in setOf(typeOf<Double>(), typeOf<Double?>()) -> Types.NUMERIC
+            type in setOf(typeOf<Double>(), typeOf<Double?>()) -> Types.FLOAT64
             type in setOf(typeOf<BigDecimal>(), typeOf<BigDecimal?>()) -> Types.BIGNUMERIC
             type in setOf(typeOf<Instant>(), typeOf<Instant?>()) -> Types.TIMESTAMP
             type in setOf(typeOf<LocalDate>(), typeOf<LocalDate?>()) -> Types.DATE
