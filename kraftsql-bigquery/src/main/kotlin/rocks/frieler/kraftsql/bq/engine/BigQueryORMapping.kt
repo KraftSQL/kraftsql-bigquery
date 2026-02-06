@@ -59,74 +59,78 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
     }
 
     override fun <T : Any> deserializeQueryResult(queryResult: Iterable<Map<Field, FieldValue>>, type: KClass<T>): List<T> =
-        queryResult.map { row -> deserializeValue(row, type) }
+        queryResult.map { row -> deserializeValue(row, type)!! }
 
-    private fun <T : Any> deserializeValue(value: Map<Field, FieldValue>, type: KClass<T>): T =
+    private fun <T : Any> deserializeValue(value: Map<Field, FieldValue>, type: KClass<T>): T? =
         when {
-        type == Integer::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().longValue.toInt() as T
+            type == Boolean::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().takeIf { !it.isNull }?.booleanValue as T?
+            }
+            type == Integer::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().longValue.toInt() as T
+            }
+            type == Long::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().longValue as T
+            }
+            type == Float::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().doubleValue.toFloat() as T
+            }
+            type == Double::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().doubleValue as T
+            }
+            type == BigDecimal::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().numericValue as T
+            }
+            type == String::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().stringValue as T
+            }
+            type == Instant::class -> {
+                @Suppress("UNCHECKED_CAST")
+                value.values.single().timestampInstant as T
+            }
+            type.starProjectedType == typeOf<Array<*>>() -> {
+                val field = value.keys.single()
+                val fieldValues = value.values.single().repeatedValue
+                val elementField = Field.of("_", field.type.standardType, field.subFields)
+                val elementType = elementField.getSqlType().naturalType.jvmErasure
+                val elements = deserializeQueryResult(fieldValues.map { value -> mapOf(elementField to value) }, elementType)
+                val array = java.lang.reflect.Array.newInstance(elementType.java, elements.size)
+                @Suppress("UNCHECKED_CAST")
+                elements.forEachIndexed { index, element -> (array as Array<Any?>)[index] = element }
+                @Suppress("UNCHECKED_CAST")
+                array as T
+            }
+            type == DataRow::class -> {
+                @Suppress("UNCHECKED_CAST")
+                DataRow(value.entries.map { (field, fieldValue) -> field.name to
+                    if (field.subFields.isNullOrEmpty()) {
+                        deserializeValue(mapOf(field to fieldValue), field.getSqlType().naturalType.jvmErasure)
+                    } else {
+                        deserializeValue(field.subFields.associateWith { fieldValue.recordValue.get(it.name) }, field.getSqlType().naturalType.jvmErasure)
+                    }
+                }) as T
+            }
+            type.isData -> {
+                val constructor = type.ensuredPrimaryConstructor()
+                constructor.callBy(constructor.parameters.associateWith { param ->
+                    val field = value.keys.single { it.name == param.name }
+                    val fieldValue = value[field]!!
+                    if (field.type.standardType == StandardSQLTypeName.STRUCT) {
+                        deserializeValue(field.subFields.zip(fieldValue.recordValue).toMap(), param.type.jvmErasure)
+                    } else {
+                        deserializeValue(mapOf(field to fieldValue), param.type.jvmErasure)
+                    }
+                })
+            }
+            else -> throw IllegalArgumentException("Unsupported target type ${type.qualifiedName}.")
         }
-        type == Long::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().longValue as T
-        }
-        type == Float::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().doubleValue.toFloat() as T
-        }
-        type == Double::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().doubleValue as T
-        }
-        type == BigDecimal::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().numericValue as T
-        }
-        type == String::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().stringValue as T
-        }
-        type == Instant::class -> {
-            @Suppress("UNCHECKED_CAST")
-            value.values.single().timestampInstant as T
-        }
-        type.starProjectedType == typeOf<Array<*>>() -> {
-            val field = value.keys.single()
-            val fieldValues = value.values.single().repeatedValue
-            val elementField = Field.of("_", field.type.standardType, field.subFields)
-            val elementType = elementField.getSqlType().naturalType.jvmErasure
-            val elements = deserializeQueryResult(fieldValues.map { value -> mapOf(elementField to value) }, elementType)
-            val array = java.lang.reflect.Array.newInstance(elementType.java, elements.size)
-            @Suppress("UNCHECKED_CAST")
-            elements.forEachIndexed { index, element -> (array as Array<Any?>)[index] = element }
-            @Suppress("UNCHECKED_CAST")
-            array as T
-        }
-        type == DataRow::class -> {
-            @Suppress("UNCHECKED_CAST")
-            DataRow(value.entries.map { (field, fieldValue) -> field.name to
-                if (field.subFields.isNullOrEmpty()) {
-                    deserializeValue(mapOf(field to fieldValue), field.getSqlType().naturalType.jvmErasure)
-                } else {
-                    deserializeValue(field.subFields.associateWith { fieldValue.recordValue.get(it.name) }, field.getSqlType().naturalType.jvmErasure)
-                }
-            }) as T
-        }
-        type.isData -> {
-            val constructor = type.ensuredPrimaryConstructor()
-            constructor.callBy(constructor.parameters.associateWith { param ->
-                val field = value.keys.single { it.name == param.name }
-                val fieldValue = value[field]!!
-                if (field.type.standardType == StandardSQLTypeName.STRUCT) {
-                    deserializeValue(field.subFields.zip(fieldValue.recordValue).toMap(), param.type.jvmErasure)
-                } else {
-                    deserializeValue(mapOf(field to fieldValue), param.type.jvmErasure)
-                }
-            })
-        }
-        else -> throw IllegalArgumentException("Unsupported target type ${type.qualifiedName}.")
-    }
 
     private fun Field.getSqlType() : Type<*> {
         return when {
