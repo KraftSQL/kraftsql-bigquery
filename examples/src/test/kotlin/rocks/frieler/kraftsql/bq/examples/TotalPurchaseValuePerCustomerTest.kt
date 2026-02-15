@@ -24,10 +24,10 @@ class TotalPurchaseValuePerCustomerTest {
         val customers = ConstantData(customer1, customer2)
 
         val purchases = ConstantData(
-            Purchase(1, customer1, Instant.EPOCH, BigDecimal("1.00")),
-            Purchase(2, customer1, Instant.EPOCH, BigDecimal("2.00")),
-            Purchase(3, customer2, Instant.EPOCH, BigDecimal("10.00")),
-            Purchase(4, customer2, Instant.EPOCH, BigDecimal("20.00")),
+            Purchase(1, customer1, Instant.EPOCH, arrayOf(), BigDecimal("1.00")),
+            Purchase(2, customer1, Instant.EPOCH, arrayOf(), BigDecimal("2.00")),
+            Purchase(3, customer2, Instant.EPOCH, arrayOf(), BigDecimal("10.00")),
+            Purchase(4, customer2, Instant.EPOCH, arrayOf(), BigDecimal("20.00")),
         )
 
         val customerPurchaseValues = aggregatePurchaseValuePerCustomer(customers, purchases)
