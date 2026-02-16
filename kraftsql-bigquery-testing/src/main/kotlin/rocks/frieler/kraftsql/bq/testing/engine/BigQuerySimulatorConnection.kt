@@ -32,6 +32,9 @@ class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnecti
     orm = BigQuerySimulatorORMapping,
     subexpressionCollector = BigQuerySubexpressionCollector(),
 ) {
+    init {
+        correlatedJoinsEnabled = true
+    }
     private var sessionMode = false
     private var activeSession: SessionState? = null
 
