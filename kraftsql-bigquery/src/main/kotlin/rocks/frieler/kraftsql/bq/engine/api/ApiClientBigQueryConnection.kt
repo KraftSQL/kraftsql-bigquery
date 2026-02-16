@@ -66,7 +66,7 @@ class ApiClientBigQueryConnection(
             return when (val type = column.type as Type) {
                 is Types.ARRAY<*> -> {
                     require(!column.nullable) { "Array fields must not be nullable." }
-                    Field.newBuilder(column.name, type.contentType.name)
+                    Field.newBuilder(column.name, type.contentType.name, if (type.contentType is Types.STRUCT) FieldList.of(type.contentType.fields.map { subfield -> constructField(subfield) }) else null)
                         .setMode(Field.Mode.REPEATED)
                         .build()
                 }
