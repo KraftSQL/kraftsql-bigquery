@@ -47,6 +47,24 @@ class BigQueryORMappingTest {
     }
 
     @Test
+    fun `deserializeQueryResult can deserialize STRING value`() {
+        val result = BigQueryORMapping.deserializeQueryResult(listOf(
+            mapOf(Field.of("value", Types.STRING.name) to FieldValue.of(FieldValue.Attribute.PRIMITIVE, "foo"))
+        ), DataRow::class)
+
+        result.single()["value"] shouldBe "foo"
+    }
+
+    @Test
+    fun `deserializeQueryResult can deserialize NULL as STRING value`() {
+        val result = BigQueryORMapping.deserializeQueryResult(listOf(
+            mapOf(Field.of("value", Types.STRING.name) to FieldValue.of(FieldValue.Attribute.PRIMITIVE, null))
+        ), DataRow::class)
+
+        result.single()["value"] shouldBe null
+    }
+
+    @Test
     fun `deserializeQueryResult can deserialize data class`() {
         data class DataClass(val value: String)
 

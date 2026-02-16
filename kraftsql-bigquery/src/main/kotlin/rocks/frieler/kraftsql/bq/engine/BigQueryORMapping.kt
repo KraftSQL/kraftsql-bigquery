@@ -89,7 +89,7 @@ object BigQueryORMapping : ORMapping<BigQueryEngine, Iterable<Map<Field, FieldVa
             }
             type == String::class -> {
                 @Suppress("UNCHECKED_CAST")
-                value.values.single().stringValue as T
+                value.values.single().takeIf { !it.isNull }?.stringValue as T?
             }
             type == Instant::class -> {
                 @Suppress("UNCHECKED_CAST")
