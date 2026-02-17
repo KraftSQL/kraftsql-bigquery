@@ -10,7 +10,10 @@ import rocks.frieler.kraftsql.bq.dml.insertInto
 import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.ArrayConcat
+import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.bq.objects.collect
+import rocks.frieler.kraftsql.expressions.Count
+import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.Data
 import rocks.frieler.kraftsql.objects.DataRow
 
@@ -48,16 +51,15 @@ fun collectProductKeywords(products: Data<BigQueryEngine, Product>) =
     }
 
 fun countKeywords(words: Data<BigQueryEngine, DataRow>): Map<String, Long> {
-    val wordCounts = words.collect()
-        .map { row ->
-            @Suppress("UNCHECKED_CAST")
-            row["keywords"] as Array<String>
-        }
-        .fold(mutableMapOf<String, Long>()) { stats, tags ->
-            tags.forEach { tag ->
-                stats.compute(tag) { _, count -> count?.plus(1) ?: 1 }
-            }
-            stats
-        }
-    return wordCounts
+    return Select<DataRow> {
+        from(words)
+        val keyword = crossJoin(Unnest(words["keywords"] as Expression<BigQueryEngine, Array<String>>) `as` "keyword")
+        groupBy(keyword["keyword"])
+        columns(
+            keyword["keyword"] `as` "keyword",
+            Count<BigQueryEngine>() `as` "count",
+        )
+    }
+        .collect()
+        .associate { it["keyword"] as String to it["count"] as Long }
 }
