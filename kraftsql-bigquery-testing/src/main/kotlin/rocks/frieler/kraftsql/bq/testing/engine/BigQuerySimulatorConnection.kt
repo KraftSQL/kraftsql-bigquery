@@ -28,7 +28,13 @@ import kotlin.reflect.typeOf
 /**
  * [rocks.frieler.kraftsql.testing.engine.SimulatorConnection] for the [BigQueryEngine].
  */
-class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(orm = BigQuerySimulatorORMapping) {
+class BigQuerySimulatorConnection : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(
+    orm = BigQuerySimulatorORMapping,
+    subexpressionCollector = BigQuerySubexpressionCollector(),
+) {
+    init {
+        correlatedJoinsEnabled = true
+    }
     private var sessionMode = false
     private var activeSession: SessionState? = null
 

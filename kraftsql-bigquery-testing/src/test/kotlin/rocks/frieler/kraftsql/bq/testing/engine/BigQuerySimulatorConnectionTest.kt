@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.bq.testing.engine
 
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
@@ -13,6 +14,7 @@ import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Struct
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.objects.ConstantData
+import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
 import rocks.frieler.kraftsql.expressions.Array
@@ -33,6 +35,22 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result shouldContainExactly listOf(DataRow("name" to "foo"))
+    }
+
+    @Test
+    fun `BigQuerySimulatorConnection has correlated JOINs enabled`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow("id" to 1))),
+                joins = listOf(LeftJoin(
+                    QuerySource(Select(
+                        source = QuerySource(ConstantData(DataRow())),
+                        columns = listOf(Projection(Column<BigQueryEngine, String>("id")))), "left"),
+                    Constant(true))),
+            ), DataRow::class
+        )
+
+        result shouldContainExactlyInAnyOrder  listOf(DataRow("id" to 1, "left.id" to 1))
     }
 
     @Test
