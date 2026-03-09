@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.dql.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.ArrayConcat
+import rocks.frieler.kraftsql.bq.expressions.ArrayLength
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
@@ -18,6 +19,7 @@ import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
 import rocks.frieler.kraftsql.expressions.Array
+import rocks.frieler.kraftsql.expressions.ArrayElementReference
 import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.objects.DataRow
 import java.time.Instant
@@ -99,6 +101,30 @@ class BigQuerySimulatorConnectionTest {
         )
 
         result.single()["timestamp"] shouldBe Instant.parse("2008-12-25T15:30:00Z")
+    }
+
+    @Test
+    fun `GenericSimulatorConnection simulates a 0-based ArrayElementReference`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow())),
+                columns = listOf(Projection(ArrayElementReference(Array(Constant(42)), Constant(0)), "first")),
+            ), DataRow::class
+        )
+
+        result.single()["first"] shouldBe 42
+    }
+
+    @Test
+    fun `GenericSimulatorConnection can simulate an ArrayLength expression`() {
+        val result = connection.execute(
+            Select(
+                source = QuerySource(ConstantData(DataRow())),
+                columns = listOf(Projection(ArrayLength(Array(Constant(1), Constant(2))), "array_length")),
+            ), DataRow::class
+        )
+
+        result.single()["array_length"] shouldBe 2L
     }
 
     @Test

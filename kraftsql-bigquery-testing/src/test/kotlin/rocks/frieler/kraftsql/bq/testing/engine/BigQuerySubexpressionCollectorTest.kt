@@ -3,13 +3,26 @@ package rocks.frieler.kraftsql.bq.testing.engine
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.expressions.ArrayLength
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
+import rocks.frieler.kraftsql.expressions.Expression
 
 class BigQuerySubexpressionCollectorTest {
     private val subexpressionCollector = BigQuerySubexpressionCollector()
+
+    @Test
+    fun `GenericSubexpressionCollector can collect array expression of ArrayLength`() {
+        val arrayExpression = org.mockito.kotlin.mock<Expression<BigQueryEngine, Array<*>>>()
+        val arrayLength = ArrayLength(arrayExpression)
+
+        val subexpressions = subexpressionCollector.getSubexpressions(arrayLength)
+
+        subexpressions shouldContainExactlyInAnyOrder listOf(arrayLength.array)
+    }
 
     @Test
     fun `BigQuerySubexpressionCollector collects JSON string and path of JsonValue`() {

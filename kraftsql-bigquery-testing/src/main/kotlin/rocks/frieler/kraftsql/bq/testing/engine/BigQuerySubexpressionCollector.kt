@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.bq.testing.engine
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
+import rocks.frieler.kraftsql.bq.expressions.ArrayLength
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.bq.expressions.Replace
@@ -14,6 +15,7 @@ import rocks.frieler.kraftsql.testing.engine.GenericSubexpressionCollector
 class BigQuerySubexpressionCollector : GenericSubexpressionCollector<BigQueryEngine>() {
     override fun getSubexpressions(expression: Expression<BigQueryEngine, *>): List<Expression<BigQueryEngine, Any?>> =
         when (expression) {
+            is ArrayLength -> listOf(expression.array)
             is JsonValue -> listOfNotNull(expression.jsonString, expression.jsonPath)
             is JsonValueArray -> listOfNotNull(expression.jsonString, expression.jsonPath)
             is Replace -> listOf(expression.originalValue, expression.fromPattern, expression.toPattern)
