@@ -5,7 +5,7 @@ allprojects {
     repositories {
         mavenCentral()
         if (version.toString().endsWith("-SNAPSHOT")) {
-            mavenLocal()
+            //mavenLocal() // enable (but please do not commit), when working with a non-main-branch build of KraftSQL core
             maven("https://maven.pkg.github.com/KraftSQL/-") {
                 credentials { // Although the packages are public, GitHub's maven registry requires authentication:
                     username = findProperty("github_packages_user")?.toString()
