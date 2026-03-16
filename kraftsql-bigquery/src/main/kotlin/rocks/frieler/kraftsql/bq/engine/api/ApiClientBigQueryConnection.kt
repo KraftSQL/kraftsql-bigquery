@@ -139,14 +139,15 @@ class ApiClientBigQueryConnection(
         }
 
     private var sessionHandler : SessionHandler? = null
-
-    override fun setSessionMode(sessionMode: Boolean) {
-        if (sessionMode) {
-            sessionHandler = sessionHandler ?: SessionHandler()
-        } else {
-            sessionHandler?.abortSession(bigquery)
-            sessionHandler = null
-        }
+    override var sessionMode: Boolean
+        get() = sessionHandler != null
+        set(newSessionMode) {
+            if (newSessionMode) {
+                sessionHandler = sessionHandler ?: SessionHandler()
+            } else {
+                sessionHandler?.abortSession(bigquery)
+                sessionHandler = null
+            }
     }
 
     private fun QueryJobConfiguration.Builder.configureSession(sessionHandler: SessionHandler?, requireSession: Boolean = false) : QueryJobConfiguration.Builder {

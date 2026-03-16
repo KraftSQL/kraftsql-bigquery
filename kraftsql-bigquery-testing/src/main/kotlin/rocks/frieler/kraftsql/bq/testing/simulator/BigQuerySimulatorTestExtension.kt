@@ -1,12 +1,12 @@
-package rocks.frieler.kraftsql.bq.testing
+package rocks.frieler.kraftsql.bq.testing.simulator
 
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.bq.testing.engine.BigQuerySimulatorConnection
+import rocks.frieler.kraftsql.bq.testing.simulator.engine.BigQuerySimulatorConnection
 import rocks.frieler.kraftsql.engine.DefaultConnection
-import rocks.frieler.kraftsql.testing.SimulatorTestExtension
+import rocks.frieler.kraftsql.testing.simulator.SimulatorTestExtension
 import kotlin.jvm.optionals.getOrNull
 
 class BigQuerySimulatorTestExtension(
@@ -14,7 +14,7 @@ class BigQuerySimulatorTestExtension(
         BigQuerySimulatorConnection().apply {
             val extensionAnnotation = extensionContext.testClass.getOrNull()?.getAnnotation(WithBigQuerySimulator::class.java)
             if (extensionAnnotation != null) {
-                setSessionMode(extensionAnnotation.sessionMode)
+                sessionMode = extensionAnnotation.sessionMode
             }
         }},
     defaultConnectionToConfigure: DefaultConnection<BigQueryEngine, BigQueryConnection>? = BigQueryEngine.DefaultConnection,

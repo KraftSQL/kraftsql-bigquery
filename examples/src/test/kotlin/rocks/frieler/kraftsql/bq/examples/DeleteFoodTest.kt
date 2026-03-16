@@ -11,7 +11,7 @@ import rocks.frieler.kraftsql.bq.examples.data.products
 import rocks.frieler.kraftsql.bq.ddl.create
 import rocks.frieler.kraftsql.bq.dml.insertInto
 import rocks.frieler.kraftsql.bq.dql.execute
-import rocks.frieler.kraftsql.bq.testing.WithBigQuerySimulator
+import rocks.frieler.kraftsql.bq.testing.simulator.WithBigQuerySimulator
 
 @WithBigQuerySimulator
 class DeleteFoodTest {

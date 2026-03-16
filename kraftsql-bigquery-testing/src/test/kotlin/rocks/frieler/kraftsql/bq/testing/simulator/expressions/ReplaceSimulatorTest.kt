@@ -1,4 +1,4 @@
-package rocks.frieler.kraftsql.bq.testing.engine
+package rocks.frieler.kraftsql.bq.testing.simulator.expressions
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -7,7 +7,7 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.expressions.Expression
-import rocks.frieler.kraftsql.testing.engine.ExpressionSimulator
+import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class ReplaceSimulatorTest {
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()

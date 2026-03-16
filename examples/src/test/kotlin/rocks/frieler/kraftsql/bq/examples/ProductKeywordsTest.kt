@@ -8,7 +8,7 @@ import rocks.frieler.kraftsql.bq.examples.data.Product
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.bq.objects.collect
 import rocks.frieler.kraftsql.objects.DataRow
-import rocks.frieler.kraftsql.bq.testing.WithBigQuerySimulator
+import rocks.frieler.kraftsql.bq.testing.simulator.WithBigQuerySimulator
 
 @WithBigQuerySimulator
 class ProductKeywordsTest {

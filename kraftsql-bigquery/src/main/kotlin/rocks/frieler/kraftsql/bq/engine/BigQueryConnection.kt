@@ -6,5 +6,5 @@ import rocks.frieler.kraftsql.engine.Connection
 interface BigQueryConnection : Connection<BigQueryEngine> {
     fun execute(loadData: LoadData)
 
-    fun setSessionMode(sessionMode: Boolean)
+    var sessionMode: Boolean
 }

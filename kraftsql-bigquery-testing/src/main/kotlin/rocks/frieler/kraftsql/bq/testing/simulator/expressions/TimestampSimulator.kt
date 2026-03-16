@@ -1,10 +1,10 @@
-package rocks.frieler.kraftsql.bq.testing.engine
+package rocks.frieler.kraftsql.bq.testing.simulator.expressions
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
-import rocks.frieler.kraftsql.testing.engine.ExpressionSimulator
+import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId

@@ -1,4 +1,4 @@
-package rocks.frieler.kraftsql.bq.testing.engine
+package rocks.frieler.kraftsql.bq.testing.simulator.expressions
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.ArrayLength
@@ -8,7 +8,7 @@ import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.expressions.Expression
-import rocks.frieler.kraftsql.testing.engine.GenericSubexpressionCollector
+import rocks.frieler.kraftsql.testing.simulator.expressions.GenericSubexpressionCollector
 
 /**
  * [GenericSubexpressionCollector] for [Expression]s supported by BigQuery.
