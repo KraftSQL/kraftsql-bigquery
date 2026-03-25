@@ -1,4 +1,4 @@
-package rocks.frieler.kraftsql.bq.testing.engine
+package rocks.frieler.kraftsql.bq.testing.simulator.expressions
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -11,7 +11,7 @@ import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
-import rocks.frieler.kraftsql.testing.engine.ExpressionSimulator
+import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class UnnestSimulatorTest {
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()

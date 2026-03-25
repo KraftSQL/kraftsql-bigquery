@@ -1,11 +1,10 @@
 @file:Suppress("IntroduceWhenSubject")
 
-package rocks.frieler.kraftsql.bq.testing.engine
+package rocks.frieler.kraftsql.bq.testing.simulator.expressions
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
-import rocks.frieler.kraftsql.testing.engine.AndSimulator
 
-class AndSimulator : AndSimulator<BigQueryEngine>() {
+class AndSimulator : rocks.frieler.kraftsql.testing.simulator.expressions.AndSimulator<BigQueryEngine>() {
     override fun simulate(left: Boolean?, right: Boolean?) =
         when {
             left == true && right == null -> null

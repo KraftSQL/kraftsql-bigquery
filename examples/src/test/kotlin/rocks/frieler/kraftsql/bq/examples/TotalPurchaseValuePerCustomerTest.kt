@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.bq.examples.data.Country
 import rocks.frieler.kraftsql.bq.examples.data.Customer
 import rocks.frieler.kraftsql.bq.examples.data.Purchase
-import rocks.frieler.kraftsql.bq.testing.WithBigQuerySimulator
+import rocks.frieler.kraftsql.bq.testing.simulator.WithBigQuerySimulator
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.bq.objects.collect
 import rocks.frieler.kraftsql.testing.kotest.inspectors.filterForOne
