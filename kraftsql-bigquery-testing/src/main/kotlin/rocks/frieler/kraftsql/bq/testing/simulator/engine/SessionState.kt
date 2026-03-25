@@ -6,6 +6,12 @@ import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.objects.Table
 import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 
+/**
+ * [EngineState] for the [BigQueryEngine] that acts as an overlay over another [EngineState] to hold temporary tables
+ * within a session.
+ *
+ * @param parent the [EngineState] to overlay
+ */
 class SessionState(
     private val parent: EngineState<BigQueryEngine>,
 ) : EngineState<BigQueryEngine>() {
