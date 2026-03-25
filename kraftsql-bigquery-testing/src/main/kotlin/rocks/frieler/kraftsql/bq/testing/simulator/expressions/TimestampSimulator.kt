@@ -32,7 +32,7 @@ class TimestampSimulator : ExpressionSimulator<BigQueryEngine, Instant?, Timesta
             null
         } else {
             val matcher = timestampLiteralPattern.matcher(timestamp).also {
-                if (!it.matches()) throw IllegalArgumentException("invalid timestamp format: $timestamp")
+                require (it.matches()) { "invalid timestamp format: $timestamp" }
             }
             LocalDateTime
                 .parse("${matcher.group("date")}T${matcher.group("time") ?: "00:00:00.000000"}")
