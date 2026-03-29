@@ -14,6 +14,7 @@ object BigQueryExpressionEvaluator : GenericExpressionEvaluator<BigQueryEngine>(
         registerExpressionSimulator(StructSimulator())
         registerExpressionSimulator(NotSimulator())
         registerExpressionSimulator(AndSimulator())
+        registerExpressionSimulator(OrSimulator())
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
         registerExpressionSimulator(ArrayElementReferenceSimulator<Any?>())
