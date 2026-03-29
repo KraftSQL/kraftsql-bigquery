@@ -12,6 +12,7 @@ object BigQueryExpressionEvaluator : GenericExpressionEvaluator<BigQueryEngine>(
         registerExpressionSimulator(ConstantSimulator<Any>())
         unregisterExpressionSimulator(rocks.frieler.kraftsql.expressions.Row::class)
         registerExpressionSimulator(StructSimulator())
+        registerExpressionSimulator(NotSimulator())
         registerExpressionSimulator(AndSimulator())
         registerExpressionSimulator(ReplaceSimulator())
         registerExpressionSimulator(TimestampSimulator())
