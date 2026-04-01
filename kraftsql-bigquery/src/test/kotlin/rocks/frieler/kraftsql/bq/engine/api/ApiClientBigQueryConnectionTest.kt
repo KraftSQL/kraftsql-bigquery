@@ -7,10 +7,10 @@ import com.google.cloud.bigquery.StandardTableDefinition
 import com.google.cloud.bigquery.TableInfo
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.argumentCaptor
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verify
 import rocks.frieler.kraftsql.bq.engine.Types
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.bq.objects.Table
@@ -18,7 +18,7 @@ import rocks.frieler.kraftsql.objects.Column
 import rocks.frieler.kraftsql.objects.DataRow
 
 class ApiClientBigQueryConnectionTest {
-    private val bqClient = mock<BigQuery>()
+    private val bqClient = mockk<BigQuery>()
     private val bqConnection = ApiClientBigQueryConnection(bqClient)
 
     @Test
@@ -27,12 +27,13 @@ class ApiClientBigQueryConnectionTest {
             Column("text", Types.STRING, nullable = false),
             Column("number", Types.INT64, nullable = true),
         ))
+        every { bqClient.create(any<TableInfo>()) } returns mockk()
 
         bqConnection.execute(CreateTable(table))
 
-        val createdTable = argumentCaptor<TableInfo>().run {
-            verify(bqClient).create(capture())
-            singleValue
+        val createdTable = slot<TableInfo>().run {
+            io.mockk.verify { bqClient.create(capture(this@run)) }
+            captured
         }
         createdTable.tableId.dataset shouldBe table.dataset
         createdTable.tableId.table shouldBe table.name
@@ -47,12 +48,13 @@ class ApiClientBigQueryConnectionTest {
         val table = Table<DataRow>(null, "dataset", "table", listOf(
             Column("array_of_strings", Types.ARRAY(Types.STRING), nullable = false),
         ))
+        every { bqClient.create(any<TableInfo>()) } returns mockk()
 
         bqConnection.execute(CreateTable(table))
 
-        val createdTable = argumentCaptor<TableInfo>().run {
-            verify(bqClient).create(capture())
-            singleValue
+        val createdTable = slot<TableInfo>().run {
+            io.mockk.verify { bqClient.create(capture(this@run)) }
+            captured
         }
         createdTable.tableId.dataset shouldBe table.dataset
         createdTable.tableId.table shouldBe table.name
@@ -66,12 +68,13 @@ class ApiClientBigQueryConnectionTest {
         val table = Table<DataRow>(null, "dataset", "table", listOf(
             Column("array_of_structs", Types.ARRAY(Types.STRUCT(listOf(Column("text", Types.STRING)))), nullable = false),
         ))
+        every { bqClient.create(any<TableInfo>()) } returns mockk()
 
         bqConnection.execute(CreateTable(table))
 
-        val createdTable = argumentCaptor<TableInfo>().run {
-            verify(bqClient).create(capture())
-            singleValue
+        val createdTable = slot<TableInfo>().run {
+            io.mockk.verify { bqClient.create(capture(this@run)) }
+            captured
         }
         createdTable.tableId.dataset shouldBe table.dataset
         createdTable.tableId.table shouldBe table.name

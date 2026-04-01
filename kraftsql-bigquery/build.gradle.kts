@@ -18,6 +18,7 @@ dependencies {
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockito)
     testAgent(libs.mockito.core) { isTransitive = false }
+    testImplementation(libs.mockk)
     testRuntimeOnly(libs.junit5.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
