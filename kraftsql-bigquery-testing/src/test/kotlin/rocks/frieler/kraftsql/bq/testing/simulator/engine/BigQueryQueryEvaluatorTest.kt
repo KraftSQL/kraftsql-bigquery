@@ -1,19 +1,24 @@
 package rocks.frieler.kraftsql.bq.testing.simulator.engine
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import rocks.frieler.kraftsql.bq.dql.Select
+import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
+import rocks.frieler.kraftsql.dsl.`as`
 import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.expressions.Min
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
+import java.sql.SQLException
 
 class BigQueryQueryEvaluatorTest {
     private val activeState = mock<EngineState<BigQueryEngine>>()
@@ -52,5 +57,18 @@ class BigQueryQueryEvaluatorTest {
         }
 
         result shouldContainExactlyInAnyOrder listOf(DataRow("id" to 1, "left.id" to 1))
+    }
+
+    @Test
+    fun `BigQueryQueryEvaluator rejects grouping by Constant`() {
+        val select = Select<DataRow> {
+            from(ConstantData(DataRow()))
+            groupBy(Constant("min"))
+            column(Min(Constant(42)) `as` "min")
+        }
+
+        shouldThrow<SQLException> {
+            context(activeState) { BigQueryQueryEvaluator.selectRows(select) }
+        }
     }
 }
