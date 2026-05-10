@@ -2,7 +2,6 @@ package rocks.frieler.kraftsql.bq.objects
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.engine.BigQueryORMapping
-import rocks.frieler.kraftsql.engine.Engine
 import rocks.frieler.kraftsql.engine.ORMapping
 import rocks.frieler.kraftsql.objects.ConstantData
 
@@ -16,10 +15,9 @@ class ConstantData<T : Any> : ConstantData<BigQueryEngine, T> {
     /**
      * Creates a new [ConstantData] with the given items.
      *
-     * The items must not be empty and all be of the same class, either a data-class or
+     * The items must not be empty, and all be of the same class, either a data-class or
      * [rocks.frieler.kraftsql.objects.DataRow].
      *
-     * @param orm the [ORMapping] of the [Engine]
      * @param items the rows
      */
     constructor(items: Iterable<T>) : super(BigQueryORMapping, items)
@@ -27,10 +25,9 @@ class ConstantData<T : Any> : ConstantData<BigQueryEngine, T> {
     /**
      * Creates a new [ConstantData] with the given items.
      *
-     * The items must not be empty and all be of the same class, either a data-class or
+     * The items must not be empty, and all be of the same class, either a data-class or
      * [rocks.frieler.kraftsql.objects.DataRow].
      *
-     * @param orm the [ORMapping] of the [Engine]
      * @param items the rows
      */
     constructor(vararg items: T) : super(BigQueryORMapping, *items)
