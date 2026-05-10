@@ -13,6 +13,7 @@ import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
+import rocks.frieler.kraftsql.dql.QuerySource.Companion.Alias
 import rocks.frieler.kraftsql.dsl.`as`
 import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.expressions.Min
@@ -44,7 +45,7 @@ class BigQueryQueryEvaluatorTest {
             Select(
                 source = QuerySource(ConstantData(DataRow())),
                 columns = listOf(Projection(leftSide["id"]))
-            ), "left"
+            ), Alias("left")
         )
 
         val result = context(activeState) {
