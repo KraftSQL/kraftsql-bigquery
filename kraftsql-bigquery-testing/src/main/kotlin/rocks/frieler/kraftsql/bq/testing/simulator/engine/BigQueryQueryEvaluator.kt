@@ -20,8 +20,8 @@ object BigQueryQueryEvaluator : GenericQueryEvaluator<BigQueryEngine>(
     }
 
     context(activeState: EngineState<BigQueryEngine>)
-    override fun selectRows(select: Select<BigQueryEngine, *>, correlatedData: DataRow?): List<DataRow> {
+    override fun evaluateSelectInternal(select: Select<BigQueryEngine, *>, correlatedData: DataRow?): List<DataRow> {
         if (select.grouping.any { it is Constant }) { throw SQLException("Cannot GROUP BY literal values") }
-        return super.selectRows(select, correlatedData)
+        return super.evaluateSelectInternal(select, correlatedData)
     }
 }

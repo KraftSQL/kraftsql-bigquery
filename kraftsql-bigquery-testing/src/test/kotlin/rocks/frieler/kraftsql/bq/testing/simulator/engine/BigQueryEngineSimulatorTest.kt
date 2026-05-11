@@ -62,7 +62,7 @@ class BigQueryEngineSimulatorTest {
         whenever(connection.sessionMode).thenReturn(true)
         val select = mock<Select<Any>>()
         val expectedResult = listOf<DataRow>(mock(), mock())
-        whenever(context(any<SessionState>()) { queryEvaluator.selectRows(eq(select), eq(null)) })
+        whenever(context(any<SessionState>()) { queryEvaluator.selectRows(eq(select)) })
             .thenReturn(expectedResult)
 
         val result = context(connection) {
@@ -207,10 +207,10 @@ class BigQueryEngineSimulatorTest {
     context(connection : Connection<BigQueryEngine>)
     private fun captureTopState() : EngineState<BigQueryEngine> {
         val select = mock<Select<Any>>()
-        whenever(context(any<EngineState<BigQueryEngine>>()) { queryEvaluator.selectRows(eq(select), eq(null)) }).thenReturn(emptyList())
+        whenever(context(any<EngineState<BigQueryEngine>>()) { queryEvaluator.selectRows(eq(select)) }).thenReturn(emptyList())
         context(connection) { bigQueryEngineSimulator.execute(select, Any::class) }
         return argumentCaptor<EngineState<BigQueryEngine>>().run {
-            verify(queryEvaluator).run { context(capture()) { selectRows(eq(select), eq(null)) } }
+            verify(queryEvaluator).run { context(capture()) { selectRows(eq(select)) } }
             clearInvocations(queryEvaluator)
             singleValue
         }
