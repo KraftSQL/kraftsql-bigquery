@@ -18,9 +18,6 @@ class JsonValue(
     override fun sql() =
         "JSON_VALUE(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 
-    override fun defaultColumnName() =
-        "JSON_VALUE(${jsonString.defaultColumnName()}${jsonPath?.let { ", ${it.defaultColumnName()}"} ?: ""})"
-
     override fun equals(other: Any?) =
         other is JsonValue && other.jsonString == jsonString && other.jsonPath == jsonPath
 

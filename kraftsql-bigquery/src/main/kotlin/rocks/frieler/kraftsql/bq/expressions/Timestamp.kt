@@ -17,9 +17,6 @@ class Timestamp(
     override fun sql(): String =
         "TIMESTAMP(${stringExpression.sql()})"
 
-    override fun defaultColumnName(): String =
-        "TIMESTAMP(${stringExpression.defaultColumnName()})"
-
     override fun equals(other: Any?) =
         other is Timestamp && other.stringExpression == stringExpression
 

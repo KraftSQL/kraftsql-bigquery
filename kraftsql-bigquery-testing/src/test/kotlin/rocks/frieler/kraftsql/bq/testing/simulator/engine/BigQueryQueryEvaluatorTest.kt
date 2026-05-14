@@ -10,6 +10,7 @@ import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.objects.ConstantData
+import rocks.frieler.kraftsql.dql.CrossJoin
 import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
@@ -39,25 +40,71 @@ class BigQueryQueryEvaluatorTest {
     }
 
     @Test
+    fun `BigQueryQueryEvaluator keeps explicit column alias`() {
+        val result = Select<DataRow>(
+            source = QuerySource(ConstantData(DataRow())),
+            columns = listOf(Projection(Constant(42), "fortytwo")),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+
+        result shouldContainExactly listOf(DataRow("fortytwo" to 42))
+    }
+
+    @Test
+    fun `BigQueryQueryEvaluator names unaliased Column expression by the referenced Column`() {
+        val result = Select<DataRow>(
+            source = QuerySource(ConstantData(DataRow("fortytwo" to 42))),
+            columns = listOf(Projection(Column<BigQueryEngine, Int>("fortytwo"))),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+
+        result shouldContainExactly listOf(DataRow("fortytwo" to 42))
+    }
+
+    @Test
+    fun `BigQueryQueryEvaluator names unaliased Column expression by the unqualified referenced Column`() {
+        val result = Select<DataRow>(
+            source = QuerySource(ConstantData(DataRow("fortytwo" to 42)), Alias("data")),
+            columns = listOf(Projection(Column<BigQueryEngine, Int>(listOf("data"), "fortytwo"))),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+
+        result shouldContainExactly listOf(DataRow("fortytwo" to 42))
+    }
+
+    @Test
+    fun `BigQueryQueryEvaluator generates f{n}_ names for unaliased expressions`() {
+        val result = Select<DataRow>(
+            source = QuerySource(ConstantData(DataRow())),
+            columns = listOf(Projection(Constant(42)), Projection(Constant(43))),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+
+        result shouldContainExactly listOf(DataRow("f0_" to 42, "f1_" to 43))
+    }
+
+    @Test
+    fun `BigQueryQueryEvaluator respects explicit f{n}_ alias when generating column names`() {
+        val result = Select<DataRow>(
+            source = QuerySource(ConstantData(DataRow())),
+            columns = listOf(Projection(Constant(42), "f1_"), Projection(Constant(43))),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+
+        result shouldContainExactly listOf(DataRow("f1_" to 42, "f0_" to 43))
+    }
+
+    @Test
     fun `BigQueryQueryEvaluator has correlated JOINs enabled`() {
         val leftSide = QuerySource(ConstantData(DataRow("id" to 1)))
         val rightSide = QuerySource(
             Select(
                 source = QuerySource(ConstantData(DataRow())),
-                columns = listOf(Projection(leftSide["id"]))
-            ), Alias("left")
+                columns = listOf(Projection(leftSide["id"], ""))
+            ), Alias("id_from_left")
         )
 
-        val result = context(activeState) {
-            BigQueryQueryEvaluator.selectRows(
-                Select<DataRow>(
-                    source = leftSide,
-                    joins = listOf(LeftJoin(rightSide, Constant(true))),
-                )
-            )
-        }
+        val result = Select<DataRow>(
+            source = leftSide,
+            joins = listOf(LeftJoin(rightSide, Constant(true))),
+        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
 
-        result shouldContainExactlyInAnyOrder listOf(DataRow("id" to 1, "left.id" to 1))
+        result shouldContainExactlyInAnyOrder listOf(DataRow("id" to 1, "id_from_left" to 1))
     }
 
     @Test

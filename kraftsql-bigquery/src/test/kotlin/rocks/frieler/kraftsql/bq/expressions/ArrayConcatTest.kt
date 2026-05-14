@@ -1,6 +1,5 @@
 package rocks.frieler.kraftsql.bq.expressions
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.string.shouldMatch
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -17,12 +16,5 @@ class ArrayConcatTest {
         val sql = ArrayConcat(array1, array2).sql()
 
         sql shouldMatch "^ARRAY_CONCAT\\(${array1.sql()},\\s*${array2.sql()}\\)$"
-    }
-
-    @Test
-    fun `default column name cannot be known in BigQuery`() {
-        shouldThrow<IllegalStateException> {
-            ArrayConcat<Any>().defaultColumnName()
-        }
     }
 }
