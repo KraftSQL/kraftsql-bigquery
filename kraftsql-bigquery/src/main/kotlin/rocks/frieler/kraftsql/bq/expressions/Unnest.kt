@@ -15,9 +15,7 @@ import rocks.frieler.kraftsql.objects.HasColumns
 class Unnest<T : Any>(
     val arrayExpression: Expression<BigQueryEngine, Array<out T>?>,
 ) : Expression<BigQueryEngine, Data<T>>, HasColumns<BigQueryEngine, T> {
-    override fun defaultColumnName() = "UNNEST(${arrayExpression.defaultColumnName()})"
-
-    override val columnNames = listOf("")
+    override val selectableColumnNames = listOf("")
 
     override fun sql() = "UNNEST(${arrayExpression.sql()})"
 

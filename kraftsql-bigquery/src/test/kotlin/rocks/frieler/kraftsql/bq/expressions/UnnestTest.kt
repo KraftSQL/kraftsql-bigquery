@@ -12,15 +12,9 @@ class UnnestTest {
     private val unnest = Unnest(arrayExpression)
 
     @Test
-    fun `default column name is UNNEST({default column name of Array Expression})`() {
-        whenever(arrayExpression.defaultColumnName()).thenReturn("array")
-
-        unnest.defaultColumnName() shouldBe "UNNEST(array)"
-    }
-
-    @Test
-    fun `UNEST has only a single unnamed sub-column`() {
-        unnest.columnNames shouldBe listOf("")
+    fun `UNNEST is only selectable in total when given an alias`() {
+        // This behavior is currently implied by an empty column name.
+        unnest.selectableColumnNames shouldBe listOf("")
     }
 
     @Test
@@ -31,22 +25,22 @@ class UnnestTest {
     }
 
     @Test
-    fun `Unnests of equal Array Expression are equal`() {
+    fun `UNNESTs of equal Array Expression are equal`() {
         (unnest == Unnest(arrayExpression)) shouldBe true
     }
 
     @Test
-    fun `Unnests of different Array Expressions are not equal`() {
+    fun `UNNESTs of different Array Expressions are not equal`() {
         (unnest == Unnest(mock<Expression<BigQueryEngine, Array<Any>>>())) shouldBe false
     }
 
     @Test
-    fun `Unnest and something else are not equal`() {
+    fun `UNNEST and something else are not equal`() {
         (unnest == Any()) shouldBe false
     }
 
     @Test
-    fun `Equal Unnests have same hash code`() {
+    fun `Equal UNNESTs have same hash code`() {
         Unnest(arrayExpression).hashCode() shouldBe unnest.hashCode()
     }
 }

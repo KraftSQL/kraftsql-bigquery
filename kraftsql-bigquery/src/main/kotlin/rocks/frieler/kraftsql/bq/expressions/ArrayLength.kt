@@ -17,8 +17,6 @@ class ArrayLength(
 ) : Expression<BigQueryEngine, Long?> {
     override fun sql() = "ARRAY_LENGTH(${array.sql()})"
 
-    override fun defaultColumnName() = "ARRAY_LENGTH(${array.defaultColumnName()})"
-
     override fun equals(other: Any?) = other is ArrayLength
             && array == other.array
 

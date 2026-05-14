@@ -16,7 +16,4 @@ class ArrayConcat<T>(
     vararg arrays: Expression<BigQueryEngine, Array<T>?>
 ) : ArrayConcatenation<BigQueryEngine, T>(arrays.toList().toTypedArray()) {
     override fun sql() = "ARRAY_CONCAT(${arguments.joinToString(",") { it.sql() }})"
-
-    override fun defaultColumnName() =
-        throw IllegalStateException("BigQuery does not provide a predictable default column name based on the evaluated expression.")
 }

@@ -21,17 +21,6 @@ class ArrayLengthTest {
     }
 
     @Test
-    fun `defaultColumnName() wraps array expression's default column name in function call`() {
-        val arrayExpression = mock<Expression<BigQueryEngine, Array<*>>>{
-            whenever(it.defaultColumnName()).thenReturn("array")
-        }
-
-        val arrayLength = ArrayLength(arrayExpression)
-
-        arrayLength.defaultColumnName() shouldBe "ARRAY_LENGTH(array)"
-    }
-
-    @Test
     fun `ArrayLengths with equal argument are equal`() {
         val arrayExpression = mock<Expression<BigQueryEngine, Array<*>>>()
 

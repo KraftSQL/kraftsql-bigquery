@@ -16,9 +16,6 @@ class JsonValueArray(
     override fun sql() =
         "JSON_VALUE_ARRAY(${jsonString.sql()}${jsonPath?.let { ", ${it.sql()}"} ?: ""})"
 
-    override fun defaultColumnName() =
-        "JSON_VALUE_ARRAY(${jsonString.defaultColumnName()}${jsonPath?.let { ", ${it.defaultColumnName()}"} ?: ""})"
-
     override fun equals(other: Any?) =
         other is JsonValueArray && other.jsonString == jsonString && other.jsonPath == jsonPath
 

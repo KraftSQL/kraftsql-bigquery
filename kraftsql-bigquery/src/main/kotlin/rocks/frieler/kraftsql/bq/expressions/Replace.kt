@@ -21,9 +21,6 @@ class Replace(
     override fun sql() =
         "REPLACE(${originalValue.sql()}, ${fromPattern.sql()}, ${toPattern.sql()})"
 
-    override fun defaultColumnName() =
-        "REPLACE(${originalValue.defaultColumnName()}, ${fromPattern.defaultColumnName()}, ${toPattern.defaultColumnName()})"
-
     override fun equals(other: Any?) =
         other is Replace
                 && originalValue == other.originalValue
