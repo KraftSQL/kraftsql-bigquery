@@ -74,6 +74,19 @@ class JsonValueSimulatorTest {
     }
 
     @Test
+    fun `JsonValueSimulator returns NULL for NULL JSON value`() {
+        val simulation = context(subexpressionCallbacks) {
+            JsonValueSimulator().simulateExpression(JsonValue(
+                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "{ \"nothing\": null }" } },
+                mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "$.nothing" } },
+            ))
+        }
+        val result = simulation(mock())
+
+        result shouldBe null
+    }
+
+    @Test
     fun `JsonValueSimulator can simulate JsonValue wrapping aggregations`() {
         val simulation = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             JsonValueSimulator().simulateAggregation(JsonValue(

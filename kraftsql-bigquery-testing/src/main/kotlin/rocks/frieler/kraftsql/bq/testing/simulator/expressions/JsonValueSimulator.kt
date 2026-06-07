@@ -29,7 +29,7 @@ class JsonValueSimulator : ExpressionSimulator<BigQueryEngine, String?, JsonValu
 
     private fun simulate(jsonString: String?, jsonPath: String?): String? =
         jsonString?.let { string -> JsonPath.read<Any?>(string, jsonPath ?: "$")
-            .takeIf { it::class.javaPrimitiveType != null || it is String }
+            ?.takeIf { it::class.javaPrimitiveType != null || it is String }
             ?.toString()
         }
 }
