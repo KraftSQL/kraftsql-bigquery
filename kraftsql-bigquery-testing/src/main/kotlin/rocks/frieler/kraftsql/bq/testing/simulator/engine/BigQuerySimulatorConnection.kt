@@ -8,10 +8,10 @@ import rocks.frieler.kraftsql.testing.simulator.engine.GenericSimulatorConnectio
 /**
  * [rocks.frieler.kraftsql.testing.simulator.engine.SimulatorConnection] for the [BigQueryEngine].
  *
- * @param engine the [BigQueryEngineSimulator] to connect to
+ * @param engine the [BigQuerySimulator] to connect to
  */
 class BigQuerySimulatorConnection(
-    override val engine: BigQueryEngineSimulator = BigQueryEngineSimulator(),
+    override val engine: BigQuerySimulator = BigQuerySimulatorBuilder().build(),
 ) : BigQueryConnection, GenericSimulatorConnection<BigQueryEngine>(engine) {
     override fun execute(loadData: LoadData) {
         engine.execute(loadData)

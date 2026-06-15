@@ -6,7 +6,7 @@ import org.mockito.kotlin.verify
 import rocks.frieler.kraftsql.bq.dml.LoadData
 
 class BigQuerySimulatorConnectionTest {
-    private val engine = mock<BigQueryEngineSimulator>()
+    private val engine = mock<BigQuerySimulator>()
     private val connection = BigQuerySimulatorConnection(engine)
 
     @Test

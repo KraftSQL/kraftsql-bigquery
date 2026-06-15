@@ -5,7 +5,6 @@ import rocks.frieler.kraftsql.bq.dml.LoadData
 import rocks.frieler.kraftsql.bq.engine.BigQueryConnection
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
-import rocks.frieler.kraftsql.bq.testing.simulator.expressions.BigQueryExpressionEvaluator
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.BeginTransaction
@@ -32,16 +31,16 @@ import kotlin.reflect.typeOf
 /**
  * [rocks.frieler.kraftsql.testing.simulator.engine.EngineSimulator] for the [BigQueryEngine].
  *
- * @param orm the [SimulatorORMapping] to use for the engine, defaults to the [BigQuerySimulatorORMapping]
- * @param persistentState the [EngineState] to use for the engine, defaults to an [EngineState]
- * @param expressionEvaluator the [GenericExpressionEvaluator] to use for the engine, defaults to the [BigQueryExpressionEvaluator]
- * @param queryEvaluator the [GenericQueryEvaluator] to use for the engine, defaults to the [BigQueryQueryEvaluator]
+ * @param orm the [SimulatorORMapping] to use for the engine
+ * @param persistentState the [EngineState] to use for the engine
+ * @param expressionEvaluator the [GenericExpressionEvaluator] to use for the engine
+ * @param queryEvaluator the [GenericQueryEvaluator] to use for the engine
  */
-class BigQueryEngineSimulator(
-    orm: SimulatorORMapping<BigQueryEngine> = BigQuerySimulatorORMapping,
-    persistentState: EngineState<BigQueryEngine> = EngineState(),
-    expressionEvaluator: GenericExpressionEvaluator<BigQueryEngine> = BigQueryExpressionEvaluator,
-    queryEvaluator: GenericQueryEvaluator<BigQueryEngine> = BigQueryQueryEvaluator,
+class BigQuerySimulator(
+    orm: SimulatorORMapping<BigQueryEngine>,
+    persistentState: EngineState<BigQueryEngine>,
+    expressionEvaluator: GenericExpressionEvaluator<BigQueryEngine>,
+    queryEvaluator: GenericQueryEvaluator<BigQueryEngine>,
 ) : GenericEngineSimulator<BigQueryEngine>(orm, persistentState, expressionEvaluator, queryEvaluator) {
     context(connection: Connection<BigQueryEngine>)
     override fun <T : Any> execute(select: Select<BigQueryEngine, T>, type: KClass<T>): List<T> {

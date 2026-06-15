@@ -20,7 +20,6 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.objects.FileSource
 import rocks.frieler.kraftsql.bq.objects.Table
 import rocks.frieler.kraftsql.bq.objects.TemporaryTable
-import rocks.frieler.kraftsql.bq.testing.simulator.expressions.BigQueryExpressionEvaluator
 import rocks.frieler.kraftsql.ddl.CreateTable
 import rocks.frieler.kraftsql.ddl.DropTable
 import rocks.frieler.kraftsql.dml.BeginTransaction
@@ -29,14 +28,18 @@ import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.engine.GenericQueryEvaluator
 import rocks.frieler.kraftsql.testing.simulator.engine.TransactionStateOverlay
+import rocks.frieler.kraftsql.testing.simulator.expressions.GenericExpressionEvaluator
 
-class BigQueryEngineSimulatorTest {
+class BigQuerySimulatorTest {
     val persistentState = mock<EngineState<BigQueryEngine>>()
+    private val expressionEvaluator = GenericExpressionEvaluator<BigQueryEngine>()
     val queryEvaluator = mock<GenericQueryEvaluator<BigQueryEngine>> {
-        whenever(it.expressionEvaluatorForChecking).thenReturn(BigQueryExpressionEvaluator)
+        whenever(it.expressionEvaluatorForChecking).thenReturn(expressionEvaluator)
     }
-    private val bigQueryEngineSimulator = BigQueryEngineSimulator(
+    private val bigQuerySimulator = BigQuerySimulator(
+        orm = BigQuerySimulatorORMapping,
         persistentState = persistentState,
+        expressionEvaluator = expressionEvaluator,
         queryEvaluator = queryEvaluator,
     )
 
@@ -51,7 +54,7 @@ class BigQueryEngineSimulatorTest {
             .thenReturn(expectedResult)
 
         val result = context(connection) {
-            bigQueryEngineSimulator.execute(select, Any::class)
+            bigQuerySimulator.execute(select, Any::class)
         }
 
         result shouldBe expectedResult
@@ -66,7 +69,7 @@ class BigQueryEngineSimulatorTest {
             .thenReturn(expectedResult)
 
         val result = context(connection) {
-            bigQueryEngineSimulator.execute(select, Any::class)
+            bigQuerySimulator.execute(select, Any::class)
         }
 
         result shouldBe expectedResult
@@ -79,7 +82,7 @@ class BigQueryEngineSimulatorTest {
             whenever(it.table).thenReturn(table)
         }
 
-        context(connection) { bigQueryEngineSimulator.execute(createTable) }
+        context(connection) { bigQuerySimulator.execute(createTable) }
 
         verify(persistentState).addTable(table)
     }
@@ -92,7 +95,7 @@ class BigQueryEngineSimulatorTest {
         }
 
         shouldThrow<UnsupportedOperationException> {
-            context(connection) { bigQueryEngineSimulator.execute(createTable) }
+            context(connection) { bigQuerySimulator.execute(createTable) }
         }
     }
 
@@ -106,7 +109,7 @@ class BigQueryEngineSimulatorTest {
             whenever(it.table).thenReturn(table)
         }
 
-        context(connection) { bigQueryEngineSimulator.execute(dropTable) }
+        context(connection) { bigQuerySimulator.execute(dropTable) }
 
         verify(persistentState).removeTable(table)
     }
@@ -119,7 +122,7 @@ class BigQueryEngineSimulatorTest {
         }
 
         shouldThrow<UnsupportedOperationException> {
-            context(connection) { bigQueryEngineSimulator.execute(dropTable) }
+            context(connection) { bigQuerySimulator.execute(dropTable) }
         }
     }
 
@@ -134,7 +137,7 @@ class BigQueryEngineSimulatorTest {
         }
 
         shouldThrow<IllegalStateException> {
-            context(connection) { bigQueryEngineSimulator.execute(loadData) }
+            context(connection) { bigQuerySimulator.execute(loadData) }
         }
     }
 
@@ -143,7 +146,7 @@ class BigQueryEngineSimulatorTest {
         whenever(connection.sessionMode).thenReturn(true)
 
         context(connection) {
-            bigQueryEngineSimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
+            bigQuerySimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
         }
     }
 
@@ -153,7 +156,7 @@ class BigQueryEngineSimulatorTest {
 
         context(connection) {
             shouldThrow<IllegalStateException> {
-                bigQueryEngineSimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
+                bigQuerySimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
             }
         }
     }
@@ -163,9 +166,9 @@ class BigQueryEngineSimulatorTest {
         whenever(connection.sessionMode).thenReturn(true)
 
         context(connection) {
-            bigQueryEngineSimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
+            bigQuerySimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
             shouldThrow<IllegalStateException> {
-                bigQueryEngineSimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
+                bigQuerySimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
             }
         }
     }
@@ -176,7 +179,7 @@ class BigQueryEngineSimulatorTest {
 
         val sessions = context(connection) {
             val firstSession = captureTopState() as SessionState
-            bigQueryEngineSimulator.abortSession()
+            bigQuerySimulator.abortSession()
             val secondSession = captureTopState() as SessionState
             firstSession to secondSession
         }
@@ -189,10 +192,10 @@ class BigQueryEngineSimulatorTest {
         whenever(connection.sessionMode).thenReturn(true)
 
         val (firstState, secondState) = context(connection) {
-            bigQueryEngineSimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
+            bigQuerySimulator.execute(mock<BeginTransaction<BigQueryEngine>>())
             val transaction = captureTopState()
             transaction.writeTable(mock(), emptyList())
-            bigQueryEngineSimulator.abortSession()
+            bigQuerySimulator.abortSession()
             val newSession = captureTopState()
             transaction to newSession
         }
@@ -208,7 +211,7 @@ class BigQueryEngineSimulatorTest {
     private fun captureTopState() : EngineState<BigQueryEngine> {
         val select = mock<Select<Any>>()
         whenever(context(any<EngineState<BigQueryEngine>>()) { queryEvaluator.selectRows(eq(select)) }).thenReturn(emptyList())
-        context(connection) { bigQueryEngineSimulator.execute(select, Any::class) }
+        context(connection) { bigQuerySimulator.execute(select, Any::class) }
         return argumentCaptor<EngineState<BigQueryEngine>>().run {
             verify(queryEvaluator).run { context(capture()) { selectRows(eq(select)) } }
             clearInvocations(queryEvaluator)

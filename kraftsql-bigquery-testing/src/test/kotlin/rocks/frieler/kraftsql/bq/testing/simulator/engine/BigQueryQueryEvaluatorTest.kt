@@ -10,7 +10,9 @@ import rocks.frieler.kraftsql.bq.dsl.Select
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Constant
 import rocks.frieler.kraftsql.bq.objects.ConstantData
-import rocks.frieler.kraftsql.dql.CrossJoin
+import rocks.frieler.kraftsql.bq.testing.simulator.expressions.BigQuerySubexpressionCollector
+import rocks.frieler.kraftsql.bq.testing.simulator.expressions.ConstantSimulator
+import rocks.frieler.kraftsql.bq.testing.simulator.expressions.StructSimulator
 import rocks.frieler.kraftsql.dql.LeftJoin
 import rocks.frieler.kraftsql.dql.Projection
 import rocks.frieler.kraftsql.dql.QuerySource
@@ -20,15 +22,28 @@ import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.expressions.Min
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
+import rocks.frieler.kraftsql.testing.simulator.expressions.ColumnSimulator
+import rocks.frieler.kraftsql.testing.simulator.expressions.GenericExpressionEvaluator
 import java.sql.SQLException
 
 class BigQueryQueryEvaluatorTest {
+    private val queryEvaluator = BigQueryQueryEvaluator(
+        BigQuerySimulatorORMapping,
+        BigQuerySubexpressionCollector(),
+        GenericExpressionEvaluator<BigQueryEngine>().apply {
+            // register some essential ExpressionSimulators necessary for this test:
+            registerExpressionSimulator(ConstantSimulator<Any>())
+            registerExpressionSimulator(ColumnSimulator<BigQueryEngine, Any>())
+            registerExpressionSimulator(StructSimulator())
+        },
+    )
+
     private val activeState = mock<EngineState<BigQueryEngine>>()
 
     @Test
     fun `BigQueryQueryEvaluator can simulate SELECT from constant data`() {
         val result = context(activeState) {
-            BigQueryQueryEvaluator.selectRows(
+            queryEvaluator.selectRows(
                 Select<DataRow>(
                     source = QuerySource(ConstantData(DataRow("name" to "foo"))),
                     columns = listOf(Projection(Column<BigQueryEngine, String>("name"))),
@@ -44,7 +59,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = QuerySource(ConstantData(DataRow())),
             columns = listOf(Projection(Constant(42), "fortytwo")),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactly listOf(DataRow("fortytwo" to 42))
     }
@@ -54,7 +69,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = QuerySource(ConstantData(DataRow("fortytwo" to 42))),
             columns = listOf(Projection(Column<BigQueryEngine, Int>("fortytwo"))),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactly listOf(DataRow("fortytwo" to 42))
     }
@@ -64,7 +79,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = QuerySource(ConstantData(DataRow("fortytwo" to 42)), Alias("data")),
             columns = listOf(Projection(Column<BigQueryEngine, Int>(listOf("data"), "fortytwo"))),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactly listOf(DataRow("fortytwo" to 42))
     }
@@ -74,7 +89,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = QuerySource(ConstantData(DataRow())),
             columns = listOf(Projection(Constant(42)), Projection(Constant(43))),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactly listOf(DataRow("f0_" to 42, "f1_" to 43))
     }
@@ -84,7 +99,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = QuerySource(ConstantData(DataRow())),
             columns = listOf(Projection(Constant(42), "f1_"), Projection(Constant(43))),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactly listOf(DataRow("f1_" to 42, "f0_" to 43))
     }
@@ -102,7 +117,7 @@ class BigQueryQueryEvaluatorTest {
         val result = Select<DataRow>(
             source = leftSide,
             joins = listOf(LeftJoin(rightSide, Constant(true))),
-        ).let { context(activeState) { BigQueryQueryEvaluator.selectRows(it) } }
+        ).let { context(activeState) { queryEvaluator.selectRows(it) } }
 
         result shouldContainExactlyInAnyOrder listOf(DataRow("id" to 1, "id_from_left" to 1))
     }
@@ -116,7 +131,7 @@ class BigQueryQueryEvaluatorTest {
         }
 
         shouldThrow<SQLException> {
-            context(activeState) { BigQueryQueryEvaluator.selectRows(select) }
+            context(activeState) { queryEvaluator.selectRows(select) }
         }
     }
 }

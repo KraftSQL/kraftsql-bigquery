@@ -2,7 +2,6 @@ package rocks.frieler.kraftsql.bq.testing.simulator.engine
 
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Constant
-import rocks.frieler.kraftsql.bq.testing.simulator.expressions.BigQueryExpressionEvaluator
 import rocks.frieler.kraftsql.bq.testing.simulator.expressions.BigQuerySubexpressionCollector
 import rocks.frieler.kraftsql.dql.Select
 import rocks.frieler.kraftsql.expressions.Column
@@ -10,13 +9,14 @@ import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
 import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.engine.GenericQueryEvaluator
+import rocks.frieler.kraftsql.testing.simulator.expressions.GenericExpressionEvaluator
 import java.sql.SQLException
 
-object BigQueryQueryEvaluator : GenericQueryEvaluator<BigQueryEngine>(
-    orm = BigQuerySimulatorORMapping,
-    subexpressionCollector = BigQuerySubexpressionCollector(),
-    expressionEvaluator = BigQueryExpressionEvaluator
-) {
+class BigQueryQueryEvaluator(
+    orm: BigQuerySimulatorORMapping,
+    subexpressionCollector: BigQuerySubexpressionCollector,
+    expressionEvaluator: GenericExpressionEvaluator<BigQueryEngine>,
+) : GenericQueryEvaluator<BigQueryEngine>(orm, subexpressionCollector, expressionEvaluator) {
     init {
         correlatedJoinsEnabled = true
     }
