@@ -7,11 +7,13 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.expressions.ArrayElementReference
 import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class ArrayElementReferenceSimulatorTest {
     private val arrayElementReferenceSimulator = ArrayElementReferenceSimulator<Any?>()
 
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
@@ -21,7 +23,7 @@ class ArrayElementReferenceSimulatorTest {
         val indexExpression = mock<Expression<BigQueryEngine, Int>>()
         whenever(subexpressionCallbacks.simulateExpression(indexExpression)).thenReturn { _ -> 1 }
 
-        val simulatedArrayElementReference = context(subexpressionCallbacks) {
+        val simulatedArrayElementReference = context(state, subexpressionCallbacks) {
             arrayElementReferenceSimulator.simulateExpression(ArrayElementReference(arrayExpression, indexExpression))
         }
         val result = simulatedArrayElementReference(mock())

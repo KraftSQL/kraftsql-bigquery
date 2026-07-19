@@ -7,14 +7,16 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValue
 import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class JsonValueSimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
     fun `JsonValueSimulator parses NULL string to NULL`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> null } },
             ))
@@ -26,7 +28,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator parses scalar string JSON value as string`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "foo" } },
             ))
@@ -38,7 +40,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator parses scalar non-string JSON value as string`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "true" } },
             ))
@@ -50,7 +52,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator returns NULL for non scalar JSON node`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "{ \"foo\": \"bar\" }" } },
             ))
@@ -62,7 +64,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator parses scalar JSON node selected by JSONPath as string`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "{ \"foo\": \"bar\" }" } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "$.foo" } },
@@ -75,7 +77,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator returns NULL for NULL JSON value`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueSimulator().simulateExpression(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "{ \"nothing\": null }" } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "$.nothing" } },
@@ -88,7 +90,7 @@ class JsonValueSimulatorTest {
 
     @Test
     fun `JsonValueSimulator can simulate JsonValue wrapping aggregations`() {
-        val simulation = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
+        val simulation = context(state, emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             JsonValueSimulator().simulateAggregation(JsonValue(
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "{ \"foo\": \"bar\" }" } },
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "$.foo" } },

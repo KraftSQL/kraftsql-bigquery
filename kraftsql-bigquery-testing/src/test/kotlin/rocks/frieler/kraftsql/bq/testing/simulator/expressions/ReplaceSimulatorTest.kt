@@ -7,14 +7,16 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Replace
 import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class ReplaceSimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
     fun `ReplaceSimulator leaves NULL as is`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             ReplaceSimulator().simulateExpression(Replace(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> null } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "World" } },
@@ -28,7 +30,7 @@ class ReplaceSimulatorTest {
 
     @Test
     fun `ReplaceSimulator replaces nothing with empty fromPattern`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             ReplaceSimulator().simulateExpression(Replace(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "Hello World!" } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "" } },
@@ -42,7 +44,7 @@ class ReplaceSimulatorTest {
 
     @Test
     fun `ReplaceSimulator replaces fromPattern with toPattern`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             ReplaceSimulator().simulateExpression(Replace(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "Hello World!" } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "World" } },
@@ -56,7 +58,7 @@ class ReplaceSimulatorTest {
 
     @Test
     fun `ReplaceSimulator can simulate Replace wrapping Aggregations`() {
-        val simulation = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
+        val simulation = context(state, emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             ReplaceSimulator().simulateAggregation(Replace(
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "Hello World!" } },
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "World" } },

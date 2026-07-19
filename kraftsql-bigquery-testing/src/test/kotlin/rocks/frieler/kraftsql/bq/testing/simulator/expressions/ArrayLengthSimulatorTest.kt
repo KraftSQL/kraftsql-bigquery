@@ -8,9 +8,11 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.ArrayLength
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class ArrayLengthSimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
@@ -22,7 +24,7 @@ class ArrayLengthSimulatorTest {
             whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> row["array"] as Array<*>? }
         }
 
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             ArrayLengthSimulator().simulateExpression(ArrayLength(arrayExpression))
         }
 
@@ -38,7 +40,7 @@ class ArrayLengthSimulatorTest {
             whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> row["array"] as Array<*>? }
         }
 
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             ArrayLengthSimulator().simulateExpression(ArrayLength(arrayExpression))
         }
 
@@ -55,7 +57,7 @@ class ArrayLengthSimulatorTest {
                 .thenReturn { _ -> row["array"] as Array<*>? }
         }
 
-        val simulation = context(subexpressionCallbacks, emptyList<Expression<BigQueryEngine, *>>()) {
+        val simulation = context(state, subexpressionCallbacks, emptyList<Expression<BigQueryEngine, *>>()) {
             ArrayLengthSimulator().simulateAggregation(ArrayLength(arrayExpression))
         }
 

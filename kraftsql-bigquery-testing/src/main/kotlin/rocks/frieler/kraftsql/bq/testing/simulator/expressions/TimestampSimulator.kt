@@ -4,6 +4,7 @@ import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 import java.time.Instant
 import java.time.LocalDateTime
@@ -17,12 +18,12 @@ class TimestampSimulator : ExpressionSimulator<BigQueryEngine, Instant?, Timesta
 
     private val timestampLiteralPattern = "^(?<date>\\d{4}-\\d{1,2}-\\d{1,2})[Tt ](?<time>\\d{1,2}:\\d{1,2}:\\d{1,2}(.\\d{1,6})?)?(?<tz>|[Zz]|[+-]\\d{1,2}(:\\d{2})?| .+/.+)$".toPattern()
 
-    context(subexpressionCallbacks : ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)
+    context(state: EngineState<BigQueryEngine>, subexpressionCallbacks : ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)
     override fun simulateExpression(expression: Timestamp): (DataRow) -> Instant? = { row ->
         simulate(subexpressionCallbacks.simulateExpression(expression.stringExpression)(row))
     }
 
-    context(groupExpressions: List<Expression<BigQueryEngine, *>>, subexpressionCallbacks : ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)
+    context(state: EngineState<BigQueryEngine>, groupExpressions: List<Expression<BigQueryEngine, *>>, subexpressionCallbacks : ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>)
     override fun simulateAggregation(expression: Timestamp): (List<DataRow>) -> Instant? = { rows ->
         simulate(subexpressionCallbacks.simulateAggregation(expression.stringExpression)(rows))
     }
