@@ -8,15 +8,17 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.Timestamp
 import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 import java.time.Instant
 
 class TimestampSimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
     fun `TimestampSimulator parses NULL string to NULL`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> null } },
             ))
@@ -28,7 +30,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses canonical timestamp`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29.123456Z" } },
             ))
@@ -40,7 +42,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String with lower 't'`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20t20:01:29.123456Z" } },
             ))
@@ -52,7 +54,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String with space between date and time`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20 20:01:29.123456Z" } },
             ))
@@ -64,7 +66,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String without fractional seconds`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29Z" } },
             ))
@@ -76,7 +78,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String with lower 'z' as timezone`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29z" } },
             ))
@@ -88,7 +90,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String without timezone`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29" } },
             ))
@@ -100,7 +102,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String with offset timezone`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29+01:30" } },
             ))
@@ -112,7 +114,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator parses timestamp String with named timezone`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             TimestampSimulator().simulateExpression(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "2025-10-20T20:01:29 Europe/Berlin" } },
             ))
@@ -125,7 +127,7 @@ class TimestampSimulatorTest {
     @Test
     fun `TimestampSimulator rejects invalid timestamp String`() {
         shouldThrow<IllegalArgumentException> {
-            context(subexpressionCallbacks) {
+            context(state, subexpressionCallbacks) {
                 TimestampSimulator().simulateExpression(Timestamp(
                     mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "right now" } },
                 ))
@@ -135,7 +137,7 @@ class TimestampSimulatorTest {
 
     @Test
     fun `TimestampSimulator can simulate Timestamp wrapping an aggregation`() {
-        val simulation = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
+        val simulation = context(state, emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             TimestampSimulator().simulateAggregation(Timestamp(
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "2025-10-20T20:01:29.123456Z" } },
             ))

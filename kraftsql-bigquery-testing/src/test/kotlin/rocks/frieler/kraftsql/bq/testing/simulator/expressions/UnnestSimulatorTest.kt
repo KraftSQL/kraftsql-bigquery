@@ -11,9 +11,11 @@ import rocks.frieler.kraftsql.bq.expressions.Unnest
 import rocks.frieler.kraftsql.bq.objects.ConstantData
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.objects.DataRow
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class UnnestSimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
     private val unnestSimulator = UnnestSimulator<Any>()
 
@@ -24,7 +26,7 @@ class UnnestSimulatorTest {
         val element2 = Any()
         whenever(subexpressionCallbacks.simulateExpression(unnest.arrayExpression)).thenReturn({ _ -> arrayOf(element1, element2) })
 
-        val simulatedUnnest = context(subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
+        val simulatedUnnest = context(state, subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
         val result = simulatedUnnest(DataRow())
 
         result.shouldBeInstanceOf<ConstantData<Any>> {
@@ -36,7 +38,7 @@ class UnnestSimulatorTest {
         val unnest = Unnest(mock<Expression<BigQueryEngine, Array<Any>>>())
         whenever(subexpressionCallbacks.simulateExpression(unnest.arrayExpression)).thenReturn({ _ -> emptyArray<Any>() })
 
-        val simulatedUnnest = context(subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
+        val simulatedUnnest = context(state, subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
         val result = simulatedUnnest(DataRow())
 
         result.shouldBeInstanceOf<ConstantData<Any>> {
@@ -49,7 +51,7 @@ class UnnestSimulatorTest {
         val unnest = Unnest(mock<Expression<BigQueryEngine, Array<Any>>>())
         whenever(subexpressionCallbacks.simulateExpression(unnest.arrayExpression)).thenReturn({ _ -> null })
 
-        val simulatedUnnest = context(subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
+        val simulatedUnnest = context(state, subexpressionCallbacks) { unnestSimulator.simulateExpression(unnest) }
         val result = simulatedUnnest(DataRow())
 
         result.shouldBeInstanceOf<ConstantData<Any>> {
@@ -65,7 +67,7 @@ class UnnestSimulatorTest {
         whenever(context(emptyList<Expression<BigQueryEngine, *>>()) { subexpressionCallbacks.simulateAggregation(unnest.arrayExpression) })
             .thenReturn({ _ -> arrayOf(element1, element2) })
 
-        val simulatedUnnest = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks,) {
+        val simulatedUnnest = context(state, emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             unnestSimulator.simulateAggregation(unnest)
         }
         val result = simulatedUnnest(listOf(DataRow()))

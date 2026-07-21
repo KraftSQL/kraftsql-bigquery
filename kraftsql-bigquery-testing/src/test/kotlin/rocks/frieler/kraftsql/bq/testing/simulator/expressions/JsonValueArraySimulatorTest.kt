@@ -7,14 +7,16 @@ import org.mockito.kotlin.whenever
 import rocks.frieler.kraftsql.bq.engine.BigQueryEngine
 import rocks.frieler.kraftsql.bq.expressions.JsonValueArray
 import rocks.frieler.kraftsql.expressions.Expression
+import rocks.frieler.kraftsql.testing.simulator.engine.EngineState
 import rocks.frieler.kraftsql.testing.simulator.expressions.ExpressionSimulator
 
 class JsonValueArraySimulatorTest {
+    private val state = mock<EngineState<BigQueryEngine>>()
     private val subexpressionCallbacks = mock<ExpressionSimulator.SubexpressionCallbacks<BigQueryEngine>>()
 
     @Test
     fun `JsonValueArraySimulator parses NULL string to empty Array`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> null } },
             ))
@@ -26,7 +28,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator parses array of string values as string array`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[\"foo\", \"bar\"]" } },
             ))
@@ -38,7 +40,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator parses array of scalar values of various types as string array`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[\"foo\", true, 42]" } },
             ))
@@ -50,7 +52,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator returns NULL when JSON to parse is not an array`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "\"foo\"" } },
             ))
@@ -62,7 +64,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator returns NULL for non scalar element in array`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "[{ \"foo\": \"bar\" }]" } },
             ))
@@ -74,7 +76,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator parses array node selected by JSONPath as string`() {
-        val simulation = context(subexpressionCallbacks) {
+        val simulation = context(state, subexpressionCallbacks) {
             JsonValueArraySimulator().simulateExpression(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "{ \"foo\": [\"bar\"] }" } },
                 mock { whenever(subexpressionCallbacks.simulateExpression(it)).thenReturn { _ -> "$.foo" } },
@@ -87,7 +89,7 @@ class JsonValueArraySimulatorTest {
 
     @Test
     fun `JsonValueArraySimulator can simulate JsonValue wrapping aggregations`() {
-        val simulation = context(emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
+        val simulation = context(state, emptyList<Expression<BigQueryEngine, *>>(), subexpressionCallbacks) {
             JsonValueArraySimulator().simulateAggregation(JsonValueArray(
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "{ \"foo\": [\"bar\"] }" } },
                 mock { whenever(subexpressionCallbacks.simulateAggregation(it)).thenReturn { _ -> "$.foo" } },
