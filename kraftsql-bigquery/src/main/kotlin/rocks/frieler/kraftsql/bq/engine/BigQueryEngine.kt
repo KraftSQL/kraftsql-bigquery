@@ -3,7 +3,6 @@ package rocks.frieler.kraftsql.bq.engine
 import com.google.cloud.bigquery.BigQuery
 import com.google.cloud.bigquery.FieldValue
 import com.google.cloud.bigquery.QueryJobConfiguration
-import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Type
@@ -33,10 +32,7 @@ class BigQueryEngine(
      * @return the data as a list of Kotlin objects
      */
     override fun <T : Any> collect(data: Data<T>, type: KClass<T>): List<T> {
-        val result = when (data) {
-            is ConstantData<T> -> bigquery.query(QueryJobConfiguration.of(sqlGenerator.makeSQL(data)))
-            else -> throw NotImplementedError("Collecting $data is not implemented.")
-        }
+        val result = bigquery.query(QueryJobConfiguration.of(sqlGenerator.makeSQL(data)))
 
         return result.values.map { valueList -> DataRow(data.schema.map { column -> column.name to valueList[column.name].value(column.type) }) }
             .map { @Suppress("UNCHECKED_CAST") if (type == DataRow::class) it as T else DataClassSerDe.deserialize(it, type) }

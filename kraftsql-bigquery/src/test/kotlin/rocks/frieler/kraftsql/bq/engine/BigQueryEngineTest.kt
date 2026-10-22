@@ -52,7 +52,7 @@ class BigQueryEngineTest {
         } as Data<Answer>
 
         val query = "<SQL statement for $data>"
-        every { sqlGenerator.makeSQL(data as ConstantData<Answer>) } returns query
+        every { sqlGenerator.makeSQL(data) } returns query
         every { bigQueryClient.query(match { it.query == query }) } returns mockTableResult(data as ConstantData<Answer>)
 
         val collectedData = engine.collect(data, Answer::class)
@@ -70,7 +70,7 @@ class BigQueryEngineTest {
         } as Data<DataRow>
 
         val query = "<SQL statement for $data>"
-        every { sqlGenerator.makeSQL(data as ConstantData<DataRow>) } returns query
+        every { sqlGenerator.makeSQL(data) } returns query
         every { bigQueryClient.query(match { it.query == query }) } returns mockTableResult(data as ConstantData<DataRow>)
 
         val collectedData = engine.collect(data, DataRow::class)

@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
+import rocks.frieler.kraftsql.data.Selection
 
 class BigQuerySqlGeneratorTest {
     @Test
@@ -57,6 +58,24 @@ class BigQuerySqlGeneratorTest {
         """.trimIndent()
 
         BigQuerySqlGenerator.constant(stringWithSpecialCaharcters.trimMargin()) shouldBe """'it\'s a \\ test\nwith a second line'"""
+    }
+
+    @Test
+    fun `makeSQL selects the columns of a Selection from its source data as subquery`() {
+        val data = ConstantData(
+            DataRow("number" to 1, "name" to "one"),
+            DataRow("number" to 2, "name" to "two"),
+        )
+        val selection = Selection(data, listOf(data.get<String>("name")))
+
+        BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
+            "SELECT `name` " +
+            "FROM (" +
+                "SELECT `number`,`name` " +
+                "FROM UNNEST(ARRAY<STRUCT<`number` INT64,`name` STRING>>[STRUCT(1,'one'),STRUCT(2,'two')]) " +
+                "WITH OFFSET AS row_number " +
+                "ORDER BY row_number" +
+            ")"
     }
 
     // ATTENTION: Does not respect String literal, but changes them as well!

@@ -1,21 +1,28 @@
 package rocks.frieler.kraftsql.bq.engine
 
 import rocks.frieler.kraftsql.data.ConstantData
+import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
+import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 
 /**
  * Utility object that generates BigQuery SQL for KraftSQL [rocks.frieler.kraftsql.data.Data].
  */
 object BigQuerySqlGenerator {
-
     /**
-     * Generates a `SELECT` statement to select the given [ConstantData] in BigQuery.
+     * Generates a `SELECT` statement to select the given [Data] in BigQuery.
      *
-     * @param data the [ConstantData] to select
+     * @param data the [Data] to select
      * @return a `SELECT` statement to select the `data`
      */
-    fun makeSQL(data: ConstantData<*>) : String {
+    fun makeSQL(data: Data<*>): String = when (data) {
+        is ConstantData<*> -> makeSQL(data)
+        is Selection -> makeSQL(data)
+        else -> throw NotImplementedError("Collecting $data is not implemented.")
+    }
+
+    private fun makeSQL(data: ConstantData<*>) : String {
         val rows = data.items.map { it as? DataRow ?: DataClassSerDe.serialize(it) }
 
         var orderingColumn = "row_number"
@@ -32,6 +39,11 @@ object BigQuerySqlGenerator {
             ORDER BY $orderingColumn
         """.trimIndent()
     }
+
+    private fun makeSQL(data: Selection): String = """
+        SELECT ${data.schema.joinToString(separator = ",") { "`${it.name}`" }}
+        FROM (${makeSQL(data.source)})
+    """.trimIndent() // TODO: Merge multiple Selections.
 
     internal fun constant(value: Any?) = when (value) {
         null -> "NULL"
