@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.expressions.get
 
 class BigQuerySqlGeneratorTest {
@@ -70,13 +71,23 @@ class BigQuerySqlGeneratorTest {
         val selection = Selection(data, listOf(data.get<String>("name")))
 
         BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
-            "SELECT `name` " +
+            "SELECT `name` AS `name` " +
             "FROM (" +
                 "SELECT `number`,`name` " +
                 "FROM UNNEST(ARRAY<STRUCT<`number` INT64,`name` STRING>>[STRUCT(1,'one'),STRUCT(2,'two')]) " +
                 "WITH OFFSET AS row_number " +
                 "ORDER BY row_number" +
             ")"
+    }
+
+    @Test
+    fun `makeSQL selects an expression of a Selection aliased by its given name`() {
+        val source = ConstantData(DataRow("foo" to "bar"))
+        val selection = Selection(source, listOf(source.get<String>("foo") named "fu"))
+
+        BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
+            "SELECT `foo` AS `fu` " +
+            "FROM (${BigQuerySqlGenerator.makeSQL(source).normalized()})"
     }
 
     // ATTENTION: Does not respect String literal, but changes them as well!
