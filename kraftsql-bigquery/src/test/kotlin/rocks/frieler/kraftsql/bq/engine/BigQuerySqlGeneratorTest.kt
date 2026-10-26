@@ -6,6 +6,7 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.data.named
+import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.get
 
 class BigQuerySqlGeneratorTest {
@@ -38,28 +39,48 @@ class BigQuerySqlGeneratorTest {
     }
 
     @Test
-    fun `constant() renders null as NULL`() {
-        BigQuerySqlGenerator.constant(null) shouldBe "NULL"
+    fun `makeSQL selects a named Constant of a Selection as literal casted to its type and aliased by its name`() {
+        val source = ConstantData(DataRow("foo" to "bar"))
+        val selection = Selection(source, listOf(Constant(42) named "answer"))
+
+        BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
+                "SELECT CAST(42 AS INT64) AS `answer` " +
+                "FROM (${BigQuerySqlGenerator.makeSQL(source).normalized()})"
     }
 
     @Test
-    fun `constant() renders an Int as integer literal`() {
-        BigQuerySqlGenerator.constant(42) shouldBe "42"
+    fun `makeSQL selects a named NULL Constant of a Selection casted to its type`() {
+        val source = ConstantData(DataRow("foo" to "bar"))
+        val selection = Selection(source, listOf(Constant<Int?>(null) named "answer"))
+
+        BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
+                "SELECT CAST(NULL AS INT64) AS `answer` " +
+                "FROM (${BigQuerySqlGenerator.makeSQL(source).normalized()})"
     }
 
     @Test
-    fun `constant() renders a String as single-quoted string literal`() {
-        BigQuerySqlGenerator.constant("text") shouldBe "'text'"
+    fun `literal() renders null as NULL`() {
+        BigQuerySqlGenerator.literal(null) shouldBe "NULL"
     }
 
     @Test
-    fun `constant() escapes special characters in a String`() {
+    fun `literal() renders an Int as integer literal`() {
+        BigQuerySqlGenerator.literal(42) shouldBe "42"
+    }
+
+    @Test
+    fun `literal() renders a String as single-quoted string literal`() {
+        BigQuerySqlGenerator.literal("text") shouldBe "'text'"
+    }
+
+    @Test
+    fun `literal() escapes special characters in a String`() {
         val stringWithSpecialCaharcters = """
             it's a \ test
             with a second line
         """.trimIndent()
 
-        BigQuerySqlGenerator.constant(stringWithSpecialCaharcters.trimMargin()) shouldBe """'it\'s a \\ test\nwith a second line'"""
+        BigQuerySqlGenerator.literal(stringWithSpecialCaharcters.trimMargin()) shouldBe """'it\'s a \\ test\nwith a second line'"""
     }
 
     @Test

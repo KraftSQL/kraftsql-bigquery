@@ -6,6 +6,8 @@ import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.expressions.Constant
+import rocks.frieler.kraftsql.expressions.Expression
 
 /**
  * Utility object that generates BigQuery SQL for KraftSQL [rocks.frieler.kraftsql.data.Data].
@@ -34,7 +36,7 @@ object BigQuerySqlGenerator {
             SELECT ${data.schema.joinToString(separator = ",") { "`${it.name}`" }}
             FROM UNNEST(ARRAY<STRUCT<${data.schema.joinToString(separator = ",") { "`${it.name}` ${it.type.native.name}" }}>>[
               ${rows.joinToString(separator = ",") { row ->
-                  row.entries.joinToString(separator = ",", prefix = "STRUCT(", postfix = ")") { entry -> constant(entry.second) }
+                  row.entries.joinToString(separator = ",", prefix = "STRUCT(", postfix = ")") { entry -> literal(entry.second) }
               }}
             ]) WITH OFFSET AS $orderingColumn
             ORDER BY $orderingColumn
@@ -42,11 +44,19 @@ object BigQuerySqlGenerator {
     }
 
     private fun makeSQL(data: Selection): String = """
-        SELECT ${data.expressions.joinToString(separator = ",") { "${column(it.expression as Column<*>)} AS `${it.name}`" }}
+        SELECT ${data.expressions.joinToString(separator = ",") { "${expression(it.expression)} AS `${it.name}`" }}
         FROM (${makeSQL(data.source)})
     """.trimIndent() // TODO: Merge multiple Selections.
 
-    internal fun constant(value: Any?) = when (value) {
+    private fun expression(expression: Expression<*>) = when (expression) {
+        is Constant<*> -> constant(expression)
+        is Column<*> -> column(expression)
+        else -> throw NotImplementedError("Rendering $expression is not implemented.")
+    }
+
+    internal fun constant(constant: Constant<*>) = "CAST(${literal(constant.value)} AS ${constant.type.native.name})"
+
+    internal fun literal(value: Any?) = when (value) {
         null -> "NULL"
         is String -> "'${value
             .replace("\\", "\\\\")
