@@ -29,8 +29,8 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 
     "integrationTestImplementation"(libs.junit.platform.suite)
-    "integrationTestRuntimeOnly"(project(":kraftsql-bigquery"))
-    "integrationTestRuntimeOnly"(libs.kraftsql.core) {
+    "integrationTestImplementation"(project(":kraftsql-bigquery"))
+    "integrationTestImplementation"(libs.kraftsql.core) {
         capabilities { requireCapability("${group}:kraftsql-reference-test:${version}") }
     }
 }

@@ -17,5 +17,7 @@ During development the connector will often depend on the current SNAPSHOT versi
 
 ### Integration tests
 
-The `integrationTest`s run **Kraft**SQL's reference test suite against a real BigQuery.
-They need access to BigQuery, configured from the environment as described for the `BigQueryEngine`.
+The `integrationTest`s run **Kraft**SQL's reference test suite against the real BigQuery service.
+
+They need access to BigQuery, configured from the environment as described for the `BigQueryEngine`, and a dataset as described for `ReferenceTestConfiguration`.
+To isolate test runs, the suite creates the dataset before the tests and deletes it with all its tables afterwards, so ensure a unique name and the necessary permissions.

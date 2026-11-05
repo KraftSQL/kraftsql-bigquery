@@ -5,11 +5,20 @@ import com.google.cloud.bigquery.Field
 import com.google.cloud.bigquery.FieldList
 import com.google.cloud.bigquery.FieldValue
 import com.google.cloud.bigquery.FieldValueList
+import com.google.cloud.bigquery.QueryJobConfiguration
+import com.google.cloud.bigquery.Schema
+import com.google.cloud.bigquery.StandardTableDefinition
+import com.google.cloud.bigquery.TableId
+import com.google.cloud.bigquery.TableInfo
 import com.google.cloud.bigquery.TableResult
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.bq.data.Table
 import rocks.frieler.kraftsql.data.Column
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
@@ -153,5 +162,86 @@ class BigQueryEngineTest {
             val row = item as? DataRow ?: DataClassSerDe.serialize(item)
             FieldValueList.of(fields.map { field -> FieldValue.of(FieldValue.Attribute.PRIMITIVE, row[field.name]?.toString()) }, fields)
         }
+    }
+
+    @Test
+    fun `createTable() creates the table at its coordinates`() {
+        val table = Table<DataRow>("test_project", "test_dataset", "test_table", listOf())
+        every { bigQueryClient.create(any<TableInfo>()) } returns mockk()
+
+        engine.createTable(table)
+
+        verify { bigQueryClient.create(match<TableInfo> { it.tableId == TableId.of("test_project", "test_dataset", "test_table") }) }
+    }
+
+    @Test
+    fun `createTable() creates the table in the default project, if the Table has no database`() {
+        val table = Table<DataRow>("test_dataset", "test_table", listOf())
+        every { bigQueryClient.create(any<TableInfo>()) } returns mockk()
+
+        engine.createTable(table)
+
+        verify { bigQueryClient.create(match<TableInfo> { it.tableId == TableId.of("test_dataset", "test_table") }) }
+    }
+
+    @Test
+    fun `createTable() creates a field with the native type for each column of the Table`() {
+        val table = Table<DataRow>("test_dataset", "test_table", listOf(
+            Column("id", Type.INTEGER),
+            Column("value", Type.NULLABLE_STRING),
+        ))
+        every { bigQueryClient.create(any<TableInfo>()) } returns mockk()
+
+        engine.createTable(table)
+
+        verify { bigQueryClient.create(match<TableInfo> { it.getDefinition<StandardTableDefinition>().schema == Schema.of(
+            Field.newBuilder("id", Type.INTEGER.native).setMode(Field.Mode.REQUIRED).build(),
+            Field.newBuilder("value", Type.NULLABLE_STRING.native).setMode(Field.Mode.NULLABLE).build(),
+        ) }) }
+    }
+
+    @Test
+    fun `dropTable() deletes the table by its coordinates`() {
+        val table = Table<DataRow>("test_project", "test_dataset", "test_table", listOf())
+        every { bigQueryClient.delete(any<TableId>()) } returns true
+
+        engine.dropTable(table)
+
+        verify { bigQueryClient.delete(TableId.of("test_project", "test_dataset", "test_table")) }
+    }
+
+    @Test
+    fun `dropTable() fails if the table did not exist`() {
+        val table = Table<DataRow>("test_project", "test_dataset", "test_table", listOf())
+        every { bigQueryClient.delete(any<TableId>()) } returns false
+
+        shouldThrow<IllegalStateException> {
+            engine.dropTable(table)
+        }
+    }
+
+    @Test
+    fun `dropTable() ignores that the table did not exist if requested`() {
+        val table = Table<DataRow>("test_project", "test_dataset", "test_table", listOf())
+        every { bigQueryClient.delete(any<TableId>()) } returns false
+
+        engine.dropTable(table, ifExists = true)
+
+        verify { bigQueryClient.delete(TableId.of("test_project", "test_dataset", "test_table")) }
+    }
+
+    @Test
+    fun `insertInto() executes INSERT INTO statement and return number of affected rows`() {
+        val table = mockk<Table<DataRow>>()
+        val data = mockk<Data<DataRow>>()
+        val insertIntoStatement = "<INSERT INTO $table <$data>>"
+        every { sqlGenerator.makeInsertIntoSQL(table, data) } returns insertIntoStatement
+        every { bigQueryClient.query(QueryJobConfiguration.of(insertIntoStatement)) } returns mockk {
+            every { totalRows } returns 14
+        }
+
+        val insertedRows = engine.insertInto(table, data)
+        verify { bigQueryClient.query(QueryJobConfiguration.of(insertIntoStatement)) }
+        insertedRows shouldBe 14
     }
 }

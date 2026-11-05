@@ -2,9 +2,12 @@ package rocks.frieler.kraftsql.bq.engine
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.data.Column
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.Table
+import rocks.frieler.kraftsql.data.Type
 import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.get
@@ -36,6 +39,16 @@ class BigQuerySqlGeneratorTest {
             "FROM UNNEST(ARRAY<STRUCT<`row_number` INT64,`name` STRING>>[STRUCT(1,'one'),STRUCT(2,'two')]) " +
             "WITH OFFSET AS _row_number " +
             "ORDER BY _row_number"
+    }
+
+    @Test
+    fun `makeSQL() selects the known columns of a table`() {
+        val table = Table<DataRow>("db", "ns", "things", listOf(
+            Column("id", Type.INTEGER),
+            Column("value", Type.NULLABLE_STRING),
+        ))
+
+        BigQuerySqlGenerator.makeSQL(table).normalized() shouldBe "SELECT `id`,`value` FROM `db`.`ns`.`things`"
     }
 
     @Test
@@ -109,6 +122,18 @@ class BigQuerySqlGeneratorTest {
         BigQuerySqlGenerator.makeSQL(selection).normalized() shouldBe
             "SELECT `foo` AS `fu` " +
             "FROM (${BigQuerySqlGenerator.makeSQL(source).normalized()})"
+    }
+
+    @Test
+    fun `makeInsertIntoSQL() inserts explicit columns of the given Data into a Table`() {
+        val table = Table<DataRow>("ns", "table", listOf(
+            Column("int", Type.INTEGER),
+            Column("string", Type.NULLABLE_STRING),
+        ))
+        val data = ConstantData(DataRow("id" to 1))
+
+        BigQuerySqlGenerator.makeInsertIntoSQL(table, data).normalized() shouldBe
+                "INSERT INTO `ns`.`table` (`id`) ${BigQuerySqlGenerator.makeSQL(data).normalized()}"
     }
 
     // ATTENTION: Does not respect String literal, but changes them as well!

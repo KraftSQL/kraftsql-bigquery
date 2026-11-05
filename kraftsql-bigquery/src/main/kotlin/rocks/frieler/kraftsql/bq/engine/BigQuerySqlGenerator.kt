@@ -4,6 +4,7 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.Table
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import rocks.frieler.kraftsql.expressions.Column
 import rocks.frieler.kraftsql.expressions.Constant
@@ -21,6 +22,7 @@ object BigQuerySqlGenerator {
      */
     fun makeSQL(data: Data<*>): String = when (data) {
         is ConstantData<*> -> makeSQL(data)
+        is Table<*> -> makeSQL(data)
         is Selection -> makeSQL(data)
         else -> throw NotImplementedError("Collecting $data is not implemented.")
     }
@@ -42,6 +44,13 @@ object BigQuerySqlGenerator {
             ORDER BY $orderingColumn
         """.trimIndent()
     }
+
+    private fun makeSQL(table: Table<*>): String = """
+        SELECT ${table.schema.joinToString(separator = ",") { "`${it.name}`" }}
+        FROM ${table.fqdn()}
+    """.trimIndent()
+
+    private fun Table<*>.fqdn(): String = listOfNotNull(database, namespace, name).joinToString(".") { "`$it`" }
 
     private fun makeSQL(data: Selection): String = """
         SELECT ${data.expressions.joinToString(separator = ",") { "${expression(it.expression)} AS `${it.name}`" }}
@@ -67,4 +76,9 @@ object BigQuerySqlGenerator {
     }
 
     internal fun column(column: Column<*>) = "`${column.name}`"
+
+    fun makeInsertIntoSQL(table: Table<*>, data: Data<*>): String = """
+        INSERT INTO ${table.fqdn()} (${data.schema.joinToString(separator = ",") { "`${it.name}`" }})
+        ${makeSQL(data)}
+    """.trimIndent()
 }
