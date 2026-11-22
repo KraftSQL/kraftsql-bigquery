@@ -16,6 +16,7 @@ It provides the [`BigQueryEngine`](kraftsql-bigquery/src/main/kotlin/rocks/friel
 During development the connector will often depend on the current SNAPSHOT version of the core library, not available at Maven Central, or even your local changes.
 - To obtain SNAPSHOT dependencies from GitHub's Maven registry configure the Gradle properties `github_packages_user` and `github_packages_password` (a token with `read:packages` scope).
 - To build against a local checkout of the core library set the Gradle property `kraftsql.core.localPath` to its path.
+  **Don't** generate Gradle's dependency lock-file while this is set, because it will omit the dependency to the core library!
 
 ### Integration tests
 

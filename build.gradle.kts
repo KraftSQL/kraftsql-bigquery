@@ -21,6 +21,10 @@ allprojects {
         }
     }
 
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+
     configurations.all {
         resolutionStrategy {
             cacheChangingModulesFor(0, TimeUnit.SECONDS)
