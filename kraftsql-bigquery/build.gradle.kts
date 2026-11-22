@@ -5,6 +5,9 @@ plugins {
     `java-library`
     idea
     id("integration-testing")
+    alias(libs.plugins.dokka.javadoc)
+    alias(libs.plugins.kover)
+    id("kraftsql-publishing")
 }
 
 java {
