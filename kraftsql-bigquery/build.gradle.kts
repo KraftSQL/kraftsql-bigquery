@@ -1,4 +1,4 @@
-project.description = "KrafSQL BigQuery Connector"
+project.description = "KraftSQL BigQuery Connector"
 
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
