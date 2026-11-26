@@ -2,9 +2,20 @@ name: CI Pipeline
 
 on: [ push, pull_request ]
 
+env:
+  # See the outputs of https://github.com/KraftSQL/kraftsql-bigquery-itest-infrastructure:
+  WORKLOAD_IDENTITY_PROVIDER: projects/505445121169/locations/global/workloadIdentityPools/github-actions/providers/github-actions-oidc
+  INTEGRATION_TEST_SERVICE_ACCOUNT: bigquery-connector-itest@kraftsql-bigquery.iam.gserviceaccount.com
+  INTEGRATION_TEST_PROJECT: kraftsql-bigquery
+  INTEGRATION_TEST_LOCATION: europe-west4
+
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+      id-token: write # to authenticate at GCP for the integration tests
     outputs:
       version: ${{ steps.provide_version.outputs.version }}
     steps:
@@ -15,6 +26,13 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '25'
+      # Only on pushes: PRs from forks can't authenticate, and PRs from this repository are covered by the push.
+      - if: github.event_name == 'push'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.INTEGRATION_TEST_SERVICE_ACCOUNT }}
+          project_id: ${{ env.INTEGRATION_TEST_PROJECT }}
       - name: Build and check
         uses: christopherfrieler/gradle-wrapper-action@v0.7.5
         env:
@@ -23,15 +41,17 @@ jobs:
           GITHUB_REPO_DEFAULT_BRANCH_NAME: ${{ github.event.repository.default_branch }}
           GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          KRAFTSQL_BIGQUERY_LOCATION: ${{ env.INTEGRATION_TEST_LOCATION }}
+          KRAFTSQL_REFERENCE_TEST_NAMESPACE: ci_${{ github.run_id }}_${{ github.run_attempt }}
         with:
-          # The integration tests need access to the real BigQuery service, which is not configured here.
           arguments: |
-            check sonar -x integrationTest
+            check sonar ${{ case(github.event_name == 'push', '', '-x integrationTest') }}
             assemble generatePomFileForMavenPublication kotlinSourcesJar dokkaJavadocJar
             versionFile
           artifacts: |
             bq-connector-build kraftsql-bigquery/build/publications/maven/pom-default.xml kraftsql-bigquery/build/libs/kraftsql-bigquery-*.jar
             bq-connector-test-report kraftsql-bigquery/build/reports/tests/test/**/*
+            ${{ case(github.event_name == 'push', 'bq-connector-integration-test-report kraftsql-bigquery/build/reports/tests/integrationTest/**/*', '') }}
       - id: provide_version
         run: echo "version=$(cat build/version.txt)" >> "$GITHUB_OUTPUT"
 
