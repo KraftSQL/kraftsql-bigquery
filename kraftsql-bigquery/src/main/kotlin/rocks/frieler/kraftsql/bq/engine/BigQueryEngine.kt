@@ -105,6 +105,7 @@ class BigQueryEngine(
         type.nullable && isNull -> null
         type in setOf(Type.INTEGER, Type.NULLABLE_INTEGER) -> longValue.toInt()
         type in setOf(Type.STRING, Type.NULLABLE_STRING) -> stringValue
+        type in setOf(Type.BOOLEAN, Type.NULLABLE_BOOLEAN) -> booleanValue
         else -> throw NotImplementedError("Collecting $type is not implemented.")
     }
 }

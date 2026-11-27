@@ -20,6 +20,12 @@ class BigQueryTypeMappingTest {
     }
 
     @Test
+    fun `Boolean types are mapped to BOOL`() {
+        Type.BOOLEAN.native shouldBe StandardSQLTypeName.BOOL
+        Type.NULLABLE_BOOLEAN.native shouldBe StandardSQLTypeName.BOOL
+    }
+
+    @Test
     fun `an unknown Type cannot be mapped`() {
         shouldThrow<IllegalStateException> {
             object : Type {
