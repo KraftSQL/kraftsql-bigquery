@@ -97,6 +97,12 @@ class BigQuerySqlGeneratorTest {
     }
 
     @Test
+    fun `literal() renders a Boolean as boolean literal`() {
+        BigQuerySqlGenerator.literal(true) shouldBe "true"
+        BigQuerySqlGenerator.literal(false) shouldBe "false"
+    }
+
+    @Test
     fun `makeSQL selects the columns of a Selection from its source data as subquery`() {
         val data = ConstantData(
             DataRow("number" to 1, "name" to "one"),
