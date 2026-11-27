@@ -6,7 +6,7 @@ workflows:
     '.github/workflows/ci-pipeline.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-java@v6.3.0'
-        - 'christopherfrieler/gradle-wrapper-action@v0.7.5'
+        - 'christopherfrieler/gradle-wrapper-action@v0.7.6'
         - 'google-github-actions/auth@v3.0.0'
 dependencies:
     'actions/checkout@v7.0.1':
@@ -19,9 +19,9 @@ dependencies:
         commit: 'sha1-d1374f8ac74474200d16ef8ecee22c7ae7a51880'
         owner_id: 44036562
         repo_id: 196057608
-    'christopherfrieler/gradle-wrapper-action@v0.7.5':
-        ref: 'v0.7.5'
-        commit: 'sha1-e6d493e5cafc7d4238bf1afb9f0144f42b9f3cdd'
+    'christopherfrieler/gradle-wrapper-action@v0.7.6':
+        ref: 'v0.7.6'
+        commit: 'sha1-adfcd3a38758140ccfe7c461df0e1b2a31fc27fe'
         owner_id: 14862460
         repo_id: 344903209
     'google-github-actions/auth@v3.0.0':
