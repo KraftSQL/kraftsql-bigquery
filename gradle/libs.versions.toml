@@ -8,7 +8,7 @@ kraftsql = "0.0.14-SNAPSHOT"
 google-cloud-libraries = "26.94.0"
 junit = "6.1.3"
 kotest = "6.2.7"
-mockk = "1.14.11"
+mockk = "1.14.12"
 
 [libraries]
 maven-publish-plugin = { group = "com.vanniktech.maven.publish", name = "com.vanniktech.maven.publish.gradle.plugin", version.ref = "maven-publish-plugin" }
